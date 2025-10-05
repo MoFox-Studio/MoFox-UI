@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -6,7 +6,7 @@ import { Label } from "./ui/label";
 import { Checkbox } from "./ui/checkbox";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Bot, Lock, User, Eye, EyeOff } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "sonner@2.0.3";
 
 interface LoginPageProps {
   onLogin: (credentials: { username: string; password: string; rememberMe: boolean }) => void;
@@ -21,20 +21,9 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
- 
-   useEffect(() => {
-    const savedUsername = localStorage.getItem("username");
-    const savedPassword = localStorage.getItem("password");
-    if (savedUsername) {
-      setCredentials(prev => ({ ...prev, username: savedUsername, rememberMe: true }));
-       if (savedPassword) {
-         setCredentials(prev => ({ ...prev, password: savedPassword, rememberMe: true }));
-       }
-    }
-  }, []);
 
-   const handleSubmit = async (e: React.FormEvent) => {
-     e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError("");
     
     if (!credentials.username || !credentials.password) {
@@ -51,13 +40,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
       // 简单的演示登录验证（实际项目中应该调用后端API）
       if (credentials.username === "admin" && credentials.password === "admin123") {
         toast.success("登录成功！");
-        if (credentials.rememberMe) {
-          localStorage.setItem("username", credentials.username);
-          localStorage.setItem("password", credentials.password);
-        } else {
-          localStorage.removeItem("username");
-          localStorage.removeItem("password");
-        }
         onLogin(credentials);
       } else {
         setError("用户名或密码错误");
@@ -147,7 +129,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 <Checkbox
                   id="remember"
                   checked={credentials.rememberMe}
-                  onCheckedChange={(checked: any) => updateCredentials("rememberMe", checked)}
+                  onCheckedChange={(checked) => updateCredentials("rememberMe", checked)}
                   disabled={isLoading}
                 />
                 <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">

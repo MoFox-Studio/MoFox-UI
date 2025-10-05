@@ -4,7 +4,7 @@ import * as React from "react";
 
 import { cn } from "./utils";
 
-function Table({ className, ...props }: React.HTMLAttributes<HTMLTableElement>) {
+function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
       data-slot="table-container"
@@ -19,7 +19,7 @@ function Table({ className, ...props }: React.HTMLAttributes<HTMLTableElement>) 
   );
 }
 
-function TableHeader({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
+function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
@@ -29,7 +29,7 @@ function TableHeader({ className, ...props }: React.HTMLAttributes<HTMLTableSect
   );
 }
 
-function TableBody({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
+function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
       data-slot="table-body"
@@ -39,7 +39,7 @@ function TableBody({ className, ...props }: React.HTMLAttributes<HTMLTableSectio
   );
 }
 
-function TableFooter({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
+function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   return (
     <tfoot
       data-slot="table-footer"
@@ -52,7 +52,7 @@ function TableFooter({ className, ...props }: React.HTMLAttributes<HTMLTableSect
   );
 }
 
-function TableRow({ className, ...props }: React.HTMLAttributes<HTMLTableRowElement>) {
+function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
       data-slot="table-row"
@@ -65,7 +65,7 @@ function TableRow({ className, ...props }: React.HTMLAttributes<HTMLTableRowElem
   );
 }
 
-function TableHead({ className, ...props }: React.HTMLAttributes<HTMLTableCellElement>) {
+function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   return (
     <th
       data-slot="table-head"
@@ -78,7 +78,7 @@ function TableHead({ className, ...props }: React.HTMLAttributes<HTMLTableCellEl
   );
 }
 
-function TableCell({ className, ...props }: React.HTMLAttributes<HTMLTableCellElement>) {
+function TableCell({ className, ...props }: React.ComponentProps<"td">) {
   return (
     <td
       data-slot="table-cell"
@@ -94,7 +94,7 @@ function TableCell({ className, ...props }: React.HTMLAttributes<HTMLTableCellEl
 function TableCaption({
   className,
   ...props
-}: React.HTMLAttributes<HTMLTableCaptionElement>) {
+}: React.ComponentProps<"caption">) {
   return (
     <caption
       data-slot="table-caption"

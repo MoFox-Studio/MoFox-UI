@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { XIcon } from "lucide-react";
+import * as SheetPrimitive from "@radix-ui/react-dialog@1.1.6";
+import { XIcon } from "lucide-react@0.487.0";
 
 import { cn } from "./utils";
 
@@ -81,7 +81,7 @@ function SheetContent({
   );
 }
 
-function SheetHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-header"
@@ -91,7 +91,7 @@ function SheetHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
   );
 }
 
-function SheetFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-footer"

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Drawer as DrawerPrimitive } from "vaul";
+import { Drawer as DrawerPrimitive } from "vaul@1.1.2";
 
 import { cn } from "./utils";
 
@@ -72,7 +72,7 @@ function DrawerContent({
   );
 }
 
-function DrawerHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="drawer-header"
@@ -82,7 +82,7 @@ function DrawerHeader({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
   );
 }
 
-function DrawerFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="drawer-footer"

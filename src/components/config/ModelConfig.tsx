@@ -1,17 +1,27 @@
 import { useState } from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
+import { Separator } from "../ui/separator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Plus, X, Brain, Server, Zap } from "lucide-react";
-import { ModelConfigType, ApiProvider, Model } from "./types";
-import { defaultConfig } from "./defaults";
 
-interface ModelConfigProps {
-  config: ModelConfigType;
-  updateConfig: (key: keyof ModelConfigType, value: any) => void;
+interface ApiProvider {
+  name: string;
+  base_url: string;
+  api_key: string;
+  timeout: number;
+}
+
+interface Model {
+  model_identifier: string;
+  name: string;
+  api_provider: string;
+  price_in: number;
+  price_out: number;
 }
 
 const taskTypes = [
@@ -35,11 +45,59 @@ const taskTypes = [
   { key: "rdf", name: "RDF", description: "知识图谱" },
 ];
 
-export function ModelConfig({ config, updateConfig }: ModelConfigProps) {
-  const safeConfig = { ...defaultConfig.model, ...(config || {}) };
-  safeConfig.providers = safeConfig.providers || [];
-  safeConfig.models = safeConfig.models || [];
-  safeConfig.taskConfig = safeConfig.taskConfig || {};
+export function ModelConfig() {
+  const [providers, setProviders] = useState<ApiProvider[]>([
+    {
+      name: "OpenAI",
+      base_url: "https://api.openai.com/v1",
+      api_key: "sk-xxxxxxxxxxxxxxxx",
+      timeout: 30
+    },
+    {
+      name: "Claude",
+      base_url: "https://api.anthropic.com",
+      api_key: "sk-ant-xxxxxxxxxxxxxxxx",
+      timeout: 30
+    }
+  ]);
+
+  const [models, setModels] = useState<Model[]>([
+    {
+      model_identifier: "gpt-4o-mini",
+      name: "GPT-4o Mini",
+      api_provider: "OpenAI",
+      price_in: 0.15,
+      price_out: 0.6
+    },
+    {
+      model_identifier: "claude-3-haiku",
+      name: "Claude 3 Haiku",
+      api_provider: "Claude",
+      price_in: 0.25,
+      price_out: 1.25
+    }
+  ]);
+
+  const [taskConfig, setTaskConfig] = useState<Record<string, string>>({
+    reply: "gpt-4o-mini",
+    decision: "gpt-4o-mini",
+    emotion: "claude-3-haiku",
+    mood: "claude-3-haiku",
+    relationship: "gpt-4o-mini",
+    tool: "gpt-4o-mini",
+    schedule: "gpt-4o-mini",
+    anti_injection: "claude-3-haiku",
+    monthly_plan: "gpt-4o-mini",
+    memory: "gpt-4o-mini",
+    embedding: "text-embedding-3-small",
+    image: "gpt-4o-mini",
+    expression: "gpt-4o-mini",
+    video: "gpt-4o-mini",
+    voice: "tts-1",
+    qa: "gpt-4o-mini",
+    entity: "gpt-4o-mini",
+    rdf: "gpt-4o-mini"
+  });
 
   const [newProvider, setNewProvider] = useState<ApiProvider>({
     name: "",
@@ -61,31 +119,32 @@ export function ModelConfig({ config, updateConfig }: ModelConfigProps) {
 
   const addProvider = () => {
     if (newProvider.name && newProvider.base_url && newProvider.api_key) {
-      updateConfig("providers", [...safeConfig.providers, { ...newProvider }]);
+      setProviders([...providers, { ...newProvider }]);
       setNewProvider({ name: "", base_url: "", api_key: "", timeout: 30 });
       setShowAddProvider(false);
     }
   };
 
   const removeProvider = (name: string) => {
-    updateConfig("providers", safeConfig.providers.filter(p => p.name !== name));
-    updateConfig("models", safeConfig.models.filter(m => m.api_provider !== name));
+    setProviders(providers.filter(p => p.name !== name));
+    // 也要移除使用此提供商的模型
+    setModels(models.filter(m => m.api_provider !== name));
   };
 
   const addModel = () => {
     if (newModel.model_identifier && newModel.name && newModel.api_provider) {
-      updateConfig("models", [...safeConfig.models, { ...newModel }]);
+      setModels([...models, { ...newModel }]);
       setNewModel({ model_identifier: "", name: "", api_provider: "", price_in: 0, price_out: 0 });
       setShowAddModel(false);
     }
   };
 
   const removeModel = (identifier: string) => {
-    updateConfig("models", safeConfig.models.filter(m => m.model_identifier !== identifier));
+    setModels(models.filter(m => m.model_identifier !== identifier));
   };
 
-  const updateTaskModel = (task: string, modelId: string) => {
-    updateConfig("taskConfig", { ...safeConfig.taskConfig, [task]: modelId });
+  const updateTaskConfig = (task: string, modelId: string) => {
+    setTaskConfig(prev => ({ ...prev, [task]: modelId }));
   };
 
   return (
@@ -101,7 +160,7 @@ export function ModelConfig({ config, updateConfig }: ModelConfigProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">
-            {safeConfig.providers.map((provider) => (
+            {providers.map((provider) => (
               <div key={provider.name} className="p-4 border rounded-lg">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
@@ -202,7 +261,7 @@ export function ModelConfig({ config, updateConfig }: ModelConfigProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">
-            {safeConfig.models.map((model) => (
+            {models.map((model) => (
               <div key={model.model_identifier} className="p-4 border rounded-lg">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
@@ -261,15 +320,15 @@ export function ModelConfig({ config, updateConfig }: ModelConfigProps) {
                 </div>
                 <div className="space-y-2">
                   <Label>API 提供商</Label>
-                  <Select
-                    value={newModel.api_provider}
+                  <Select 
+                    value={newModel.api_provider} 
                     onValueChange={(value) => setNewModel(prev => ({ ...prev, api_provider: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="选择提供商" />
                     </SelectTrigger>
                     <SelectContent>
-                      {safeConfig.providers.map(provider => (
+                      {providers.map(provider => (
                         <SelectItem key={provider.name} value={provider.name}>
                           {provider.name}
                         </SelectItem>
@@ -335,15 +394,15 @@ export function ModelConfig({ config, updateConfig }: ModelConfigProps) {
                   <Label htmlFor={`task-${task.key}`}>{task.name}</Label>
                   <p className="text-xs text-muted-foreground">{task.description}</p>
                 </div>
-                <Select
-                  value={safeConfig.taskConfig[task.key] || ""}
-                  onValueChange={(value) => updateTaskModel(task.key, value)}
+                <Select 
+                  value={taskConfig[task.key] || ""} 
+                  onValueChange={(value) => updateTaskConfig(task.key, value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="选择模型" />
                   </SelectTrigger>
                   <SelectContent>
-                    {safeConfig.models.map(model => (
+                    {models.map(model => (
                       <SelectItem key={model.model_identifier} value={model.model_identifier}>
                         <div className="flex items-center gap-2">
                           <span>{model.name}</span>

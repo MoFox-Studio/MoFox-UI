@@ -3,12 +3,12 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   MoreHorizontalIcon,
-} from "lucide-react";
+} from "lucide-react@0.487.0";
 
 import { cn } from "./utils";
 import { Button, buttonVariants } from "./button";
 
-function Pagination({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
+function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
     <nav
       role="navigation"
@@ -23,7 +23,7 @@ function Pagination({ className, ...props }: React.HTMLAttributes<HTMLElement>) 
 function PaginationContent({
   className,
   ...props
-}: React.HTMLAttributes<HTMLUListElement>) {
+}: React.ComponentProps<"ul">) {
   return (
     <ul
       data-slot="pagination-content"
@@ -33,14 +33,14 @@ function PaginationContent({
   );
 }
 
-function PaginationItem({ ...props }: React.HTMLAttributes<HTMLLIElement>) {
+function PaginationItem({ ...props }: React.ComponentProps<"li">) {
   return <li data-slot="pagination-item" {...props} />;
 }
 
 type PaginationLinkProps = {
   isActive?: boolean;
 } & Pick<React.ComponentProps<typeof Button>, "size"> &
-  React.AnchorHTMLAttributes<HTMLAnchorElement>;
+  React.ComponentProps<"a">;
 
 function PaginationLink({
   className,
@@ -102,7 +102,7 @@ function PaginationNext({
 function PaginationEllipsis({
   className,
   ...props
-}: React.HTMLAttributes<HTMLSpanElement>) {
+}: React.ComponentProps<"span">) {
   return (
     <span
       aria-hidden

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -5,36 +6,62 @@ import { Switch } from "../ui/switch";
 import { Slider } from "../ui/slider";
 import { Separator } from "../ui/separator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import {
-  Heart,
-  Brain,
-  Wrench,
-  BookOpen,
+import { 
+  Heart, 
+  Brain, 
+  Wrench, 
+  BookOpen, 
   Calendar,
   Smile
 } from "lucide-react";
-import { FeatureConfigType } from "./types";
-import { defaultConfig } from "./defaults";
 
-interface FeatureConfigProps {
-  config: FeatureConfigType;
-  updateConfig: (key: string, value: any) => void;
-}
+export function FeatureConfig() {
+  const [config, setConfig] = useState({
+    // 关系与记忆系统
+    relationship: {
+      enable_relationship: true,
+      relation_frequency: 0.5,
+    },
+    memory: {
+      enable_memory: true,
+      memory_build_interval: 3600,
+      min_memory_length: 50,
+      max_memory_length: 500,
+      enable_memory_forgetting: true,
+      base_forgetting_days: 30,
+      critical_importance_bonus: 7,
+    },
+    
+    // 工具与情绪系统
+    tools: {
+      enable_tool: true,
+    },
+    mood: {
+      enable_mood: true,
+      mood_update_threshold: 0.3,
+    },
+    
+    // LPMM 知识库
+    knowledge: {
+      enable: true,
+      rag_synonym_search_top_k: 5,
+      qa_relation_threshold: 0.8,
+    },
+    
+    // 自定义提示词
+    prompts: {
+      image_prompt: "请描述这张图片的内容，包括主要物体、场景、颜色和氛围。",
+    }
+  });
 
-export function FeatureConfig({ config, updateConfig }: FeatureConfigProps) {
-  const safeConfig = {
-    ...defaultConfig.features,
-    ...(config || {}),
-    relationship: { ...defaultConfig.features.relationship, ...(config?.relationship || {}) },
-    memory: { ...defaultConfig.features.memory, ...(config?.memory || {}) },
-    tools: { ...defaultConfig.features.tools, ...(config?.tools || {}) },
-    mood: { ...defaultConfig.features.mood, ...(config?.mood || {}) },
-    knowledge: { ...defaultConfig.features.knowledge, ...(config?.knowledge || {}) },
-    prompts: { ...defaultConfig.features.prompts, ...(config?.prompts || {}) },
-  };
-
-  const handleUpdate = (section: keyof FeatureConfigType, key: string, value: any) => {
-    updateConfig(`${String(section)}.${key}`, value);
+  const updateConfig = (section: string, key: string, value: any) => {
+    setConfig(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section as keyof typeof prev],
+        [key]: value
+      }
+    }));
   };
 
   return (
@@ -57,24 +84,24 @@ export function FeatureConfig({ config, updateConfig }: FeatureConfigProps) {
               </p>
             </div>
             <Switch
-              checked={safeConfig.relationship.enable_relationship}
-              onCheckedChange={(checked) => handleUpdate("relationship", "enable_relationship", checked)}
+              checked={config.relationship.enable_relationship}
+              onCheckedChange={(checked) => updateConfig("relationship", "enable_relationship", checked)}
             />
           </div>
 
-          {safeConfig.relationship.enable_relationship && (
+          {config.relationship.enable_relationship && (
             <>
               <Separator />
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label>关系频率</Label>
                   <span className="text-sm text-muted-foreground">
-                    {safeConfig.relationship.relation_frequency}
+                    {config.relationship.relation_frequency}
                   </span>
                 </div>
                 <Slider
-                  value={[safeConfig.relationship.relation_frequency]}
-                  onValueChange={(value) => handleUpdate("relationship", "relation_frequency", value[0])}
+                  value={[config.relationship.relation_frequency]}
+                  onValueChange={(value) => updateConfig("relationship", "relation_frequency", value[0])}
                   min={0}
                   max={1}
                   step={0.1}
@@ -109,12 +136,12 @@ export function FeatureConfig({ config, updateConfig }: FeatureConfigProps) {
               </p>
             </div>
             <Switch
-              checked={safeConfig.memory.enable_memory}
-              onCheckedChange={(checked) => handleUpdate("memory", "enable_memory", checked)}
+              checked={config.memory.enable_memory}
+              onCheckedChange={(checked) => updateConfig("memory", "enable_memory", checked)}
             />
           </div>
 
-          {safeConfig.memory.enable_memory && (
+          {config.memory.enable_memory && (
             <>
               <Separator />
               
@@ -123,8 +150,8 @@ export function FeatureConfig({ config, updateConfig }: FeatureConfigProps) {
                 <Input
                   id="memory-interval"
                   type="number"
-                  value={safeConfig.memory.memory_build_interval}
-                  onChange={(e) => handleUpdate("memory", "memory_build_interval", parseInt(e.target.value) || 0)}
+                  value={config.memory.memory_build_interval}
+                  onChange={(e) => updateConfig("memory", "memory_build_interval", parseInt(e.target.value) || 0)}
                   placeholder="3600"
                 />
                 <p className="text-sm text-muted-foreground">
@@ -138,8 +165,8 @@ export function FeatureConfig({ config, updateConfig }: FeatureConfigProps) {
                   <Input
                     id="min-memory"
                     type="number"
-                    value={safeConfig.memory.min_memory_length}
-                    onChange={(e) => handleUpdate("memory", "min_memory_length", parseInt(e.target.value) || 0)}
+                    value={config.memory.min_memory_length}
+                    onChange={(e) => updateConfig("memory", "min_memory_length", parseInt(e.target.value) || 0)}
                     placeholder="50"
                   />
                 </div>
@@ -148,8 +175,8 @@ export function FeatureConfig({ config, updateConfig }: FeatureConfigProps) {
                   <Input
                     id="max-memory"
                     type="number"
-                    value={safeConfig.memory.max_memory_length}
-                    onChange={(e) => handleUpdate("memory", "max_memory_length", parseInt(e.target.value) || 0)}
+                    value={config.memory.max_memory_length}
+                    onChange={(e) => updateConfig("memory", "max_memory_length", parseInt(e.target.value) || 0)}
                     placeholder="500"
                   />
                 </div>
@@ -171,20 +198,20 @@ export function FeatureConfig({ config, updateConfig }: FeatureConfigProps) {
                     </p>
                   </div>
                   <Switch
-                    checked={safeConfig.memory.enable_memory_forgetting}
-                    onCheckedChange={(checked) => handleUpdate("memory", "enable_memory_forgetting", checked)}
+                    checked={config.memory.enable_memory_forgetting}
+                    onCheckedChange={(checked) => updateConfig("memory", "enable_memory_forgetting", checked)}
                   />
                 </div>
 
-                {safeConfig.memory.enable_memory_forgetting && (
+                {config.memory.enable_memory_forgetting && (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="base-forgetting">基础遗忘天数</Label>
                       <Input
                         id="base-forgetting"
                         type="number"
-                        value={safeConfig.memory.base_forgetting_days}
-                        onChange={(e) => handleUpdate("memory", "base_forgetting_days", parseInt(e.target.value) || 0)}
+                        value={config.memory.base_forgetting_days}
+                        onChange={(e) => updateConfig("memory", "base_forgetting_days", parseInt(e.target.value) || 0)}
                         placeholder="30"
                       />
                     </div>
@@ -193,8 +220,8 @@ export function FeatureConfig({ config, updateConfig }: FeatureConfigProps) {
                       <Input
                         id="importance-bonus"
                         type="number"
-                        value={safeConfig.memory.critical_importance_bonus}
-                        onChange={(e) => handleUpdate("memory", "critical_importance_bonus", parseInt(e.target.value) || 0)}
+                        value={config.memory.critical_importance_bonus}
+                        onChange={(e) => updateConfig("memory", "critical_importance_bonus", parseInt(e.target.value) || 0)}
                         placeholder="7"
                       />
                     </div>
@@ -224,8 +251,8 @@ export function FeatureConfig({ config, updateConfig }: FeatureConfigProps) {
               </p>
             </div>
             <Switch
-              checked={safeConfig.tools.enable_tool}
-              onCheckedChange={(checked) => handleUpdate("tools", "enable_tool", checked)}
+              checked={config.tools.enable_tool}
+              onCheckedChange={(checked) => updateConfig("tools", "enable_tool", checked)}
             />
           </div>
         </CardContent>
@@ -249,24 +276,24 @@ export function FeatureConfig({ config, updateConfig }: FeatureConfigProps) {
               </p>
             </div>
             <Switch
-              checked={safeConfig.mood.enable_mood}
-              onCheckedChange={(checked) => handleUpdate("mood", "enable_mood", checked)}
+              checked={config.mood.enable_mood}
+              onCheckedChange={(checked) => updateConfig("mood", "enable_mood", checked)}
             />
           </div>
 
-          {safeConfig.mood.enable_mood && (
+          {config.mood.enable_mood && (
             <>
               <Separator />
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label>情绪更新阈值</Label>
                   <span className="text-sm text-muted-foreground">
-                    {safeConfig.mood.mood_update_threshold}
+                    {config.mood.mood_update_threshold}
                   </span>
                 </div>
                 <Slider
-                  value={[safeConfig.mood.mood_update_threshold]}
-                  onValueChange={(value) => handleUpdate("mood", "mood_update_threshold", value[0])}
+                  value={[config.mood.mood_update_threshold]}
+                  onValueChange={(value) => updateConfig("mood", "mood_update_threshold", value[0])}
                   min={0}
                   max={1}
                   step={0.1}
@@ -304,12 +331,12 @@ export function FeatureConfig({ config, updateConfig }: FeatureConfigProps) {
               </p>
             </div>
             <Switch
-              checked={safeConfig.knowledge.enable}
-              onCheckedChange={(checked) => handleUpdate("knowledge", "enable", checked)}
+              checked={config.knowledge.enable}
+              onCheckedChange={(checked) => updateConfig("knowledge", "enable", checked)}
             />
           </div>
 
-          {safeConfig.knowledge.enable && (
+          {config.knowledge.enable && (
             <>
               <Separator />
               <div className="grid grid-cols-2 gap-4">
@@ -318,8 +345,8 @@ export function FeatureConfig({ config, updateConfig }: FeatureConfigProps) {
                   <Input
                     id="synonym-search"
                     type="number"
-                    value={safeConfig.knowledge.rag_synonym_search_top_k}
-                    onChange={(e) => handleUpdate("knowledge", "rag_synonym_search_top_k", parseInt(e.target.value) || 0)}
+                    value={config.knowledge.rag_synonym_search_top_k}
+                    onChange={(e) => updateConfig("knowledge", "rag_synonym_search_top_k", parseInt(e.target.value) || 0)}
                     placeholder="5"
                   />
                 </div>
@@ -331,8 +358,8 @@ export function FeatureConfig({ config, updateConfig }: FeatureConfigProps) {
                     step="0.1"
                     min="0"
                     max="1"
-                    value={safeConfig.knowledge.qa_relation_threshold}
-                    onChange={(e) => handleUpdate("knowledge", "qa_relation_threshold", parseFloat(e.target.value) || 0)}
+                    value={config.knowledge.qa_relation_threshold}
+                    onChange={(e) => updateConfig("knowledge", "qa_relation_threshold", parseFloat(e.target.value) || 0)}
                     placeholder="0.8"
                   />
                 </div>
@@ -353,8 +380,8 @@ export function FeatureConfig({ config, updateConfig }: FeatureConfigProps) {
             <Label htmlFor="image-prompt">图像描述提示词</Label>
             <Textarea
               id="image-prompt"
-              value={safeConfig.prompts.image_prompt}
-              onChange={(e) => handleUpdate("prompts", "image_prompt", e.target.value)}
+              value={config.prompts.image_prompt}
+              onChange={(e) => updateConfig("prompts", "image_prompt", e.target.value)}
               placeholder="请描述这张图片的内容..."
               rows={3}
             />

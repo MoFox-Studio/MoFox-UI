@@ -3,8 +3,8 @@
 import * as React from "react";
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
-} from "embla-carousel-react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+} from "embla-carousel-react@8.6.0";
+import { ArrowLeft, ArrowRight } from "lucide-react@0.487.0";
 
 import { cn } from "./utils";
 import { Button } from "./button";
@@ -50,7 +50,7 @@ function Carousel({
   className,
   children,
   ...props
-}: React.HTMLAttributes<HTMLDivElement> & CarouselProps) {
+}: React.ComponentProps<"div"> & CarouselProps) {
   const [carouselRef, api] = useEmblaCarousel(
     {
       ...opts,
@@ -132,7 +132,7 @@ function Carousel({
   );
 }
 
-function CarouselContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
   const { carouselRef, orientation } = useCarousel();
 
   return (
@@ -153,7 +153,7 @@ function CarouselContent({ className, ...props }: React.HTMLAttributes<HTMLDivEl
   );
 }
 
-function CarouselItem({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
   const { orientation } = useCarousel();
 
   return (

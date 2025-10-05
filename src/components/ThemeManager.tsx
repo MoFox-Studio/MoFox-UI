@@ -1,76 +1,46 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
-import { SketchPicker, ColorResult } from "react-color";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { useEffect } from "react";
+import { useTheme } from "../hooks/useTheme";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Slider } from "./ui/slider";
 import { Switch } from "./ui/switch";
 import { Badge } from "./ui/badge";
 import { Palette, Sun, Moon, Monitor, Eye, Sparkles } from "lucide-react";
-import { toast } from "sonner";
-import { cn } from "../lib/utils";
+import { toast } from "sonner@2.0.3";
 
-type ThemeMode = "light" | "dark" | "auto";
-type CustomColors = {
-  primary: string;
-  secondary: string;
-  accent: string;
-};
-type Effects = {
-  animations: boolean;
-  shadows: boolean;
-  blur: boolean;
-};
-type Accessibility = {
-  highContrast: boolean;
-  reducedMotion: boolean;
-  fontSize: number;
-};
-
-export interface ThemeConfig {
-  mode: ThemeMode;
+interface ThemeConfig {
+  mode: "light" | "dark" | "auto";
   preset: string;
-  customColors: CustomColors;
-  effects: Effects;
-  accessibility: Accessibility;
-}
-
-export const DEFAULT_THEME_COLORS_LIGHT = {
-  primary: "#030213",
-  secondary: "#ececf0",
-  accent: "#e9ebef",
-};
-
-export const DEFAULT_THEME_COLORS_DARK = {
-  primary: "#E5E7EB",
-  secondary: "#1F2937",
-  accent: "#374151",
-};
-
-export const defaultConfig: ThemeConfig = {
-  mode: "light",
-  preset: "default",
-  customColors: DEFAULT_THEME_COLORS_LIGHT,
+  customColors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+  };
   effects: {
-    animations: true,
-    shadows: true,
-    blur: true
-  },
+    animations: boolean;
+    shadows: boolean;
+    blur: boolean;
+  };
   accessibility: {
-    highContrast: false,
-    reducedMotion: false,
-    fontSize: 16
-  }
-};
+    highContrast: boolean;
+    reducedMotion: boolean;
+    fontSize: number;
+  };
+}
 
 const presetThemes = [
   {
     id: "default",
     name: "默认主题",
     description: "经典的蓝色配色方案",
-    colors: DEFAULT_THEME_COLORS_LIGHT,
+    colors: {
+      primary: "#030213",
+      secondary: "#ececf0",
+      accent: "#e9ebef"
+    }
   },
   {
     id: "ocean",
@@ -124,85 +94,49 @@ const presetThemes = [
   }
 ];
 
-interface ThemeManagerProps {
-  config: ThemeConfig;
-  setConfig: Dispatch<SetStateAction<ThemeConfig>>;
-}
+export function ThemeManager() {
+  const { config, updateConfig, updateNestedConfig, resetToDefault } = useTheme();
 
-export function ThemeManager({ config, setConfig }: ThemeManagerProps) {
-  const [activeColorPicker, setActiveColorPicker] = useState<string | null>(null);
-
-  const updateConfig = (key: keyof ThemeConfig, value: any) => {
-    setConfig(prev => {
-      const newConfig = { ...prev, [key]: value };
-      if (key === 'mode' && newConfig.preset === 'default') {
-        newConfig.customColors = value === 'dark'
-          ? DEFAULT_THEME_COLORS_DARK
-          : DEFAULT_THEME_COLORS_LIGHT;
-      }
-      return newConfig;
-    });
+  const handleUpdateConfig = (key: keyof typeof config, value: any) => {
+    updateConfig({ [key]: value });
   };
 
-  const updateNestedConfig = (
-    section: keyof ThemeConfig,
-    key: string,
-    value: boolean | string | number
-  ) => {
-    setConfig(prev => {
-      const sectionData = prev[section] as Record<string, any>;
-      const newConfig = {
-        ...prev,
-        [section]: {
-          ...sectionData,
-          [key]: value
-        }
-      };
-      if (section === 'customColors') {
-        newConfig.preset = 'custom';
-      }
-      return newConfig;
-    });
+  const handleUpdateNestedConfig = (section: keyof typeof config, key: string, value: any) => {
+    updateNestedConfig(section, { [key]: value });
   };
 
   const applyPreset = (presetId: string) => {
     const preset = presetThemes.find(t => t.id === presetId);
     if (preset) {
-      let newColors = preset.colors;
-      if (preset.id === 'default' && config.mode === 'dark') {
-        newColors = DEFAULT_THEME_COLORS_DARK;
-      }
-      setConfig(prev => ({
-        ...prev,
+      updateConfig({
         preset: presetId,
-        customColors: newColors
-      }));
+        customColors: preset.colors
+      });
       toast.success(`已应用 ${preset.name} 主题`);
     }
   };
 
-  const resetToDefault = () => {
-    setConfig(defaultConfig);
+  const handleReset = () => {
+    resetToDefault();
     toast.success("已重置为默认主题");
   };
 
   return (
     <div className="space-y-6">
-      {/* 头部标题 */}
-      <header className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Palette className="h-5 w-5" />
           <div>
-            <h2 className="text-lg font-semibold">主题设置</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2>主题设置</h2>
+            <p className="text-muted-foreground">
               自定义界面外观和配色方案
             </p>
           </div>
         </div>
-        <Button variant="outline" onClick={resetToDefault}>
+        <Button variant="outline" onClick={handleReset}>
           重置为默认
         </Button>
-      </header>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 显示模式 */}
@@ -219,7 +153,7 @@ export function ThemeManager({ config, setConfig }: ThemeManagerProps) {
               <Button
                 variant={config.mode === "light" ? "default" : "outline"}
                 size="sm"
-                onClick={() => updateConfig("mode", "light")}
+                onClick={() => handleUpdateConfig("mode", "light")}
                 className="flex flex-col gap-1 h-auto py-3"
               >
                 <Sun className="h-4 w-4" />
@@ -228,7 +162,7 @@ export function ThemeManager({ config, setConfig }: ThemeManagerProps) {
               <Button
                 variant={config.mode === "dark" ? "default" : "outline"}
                 size="sm"
-                onClick={() => updateConfig("mode", "dark")}
+                onClick={() => handleUpdateConfig("mode", "dark")}
                 className="flex flex-col gap-1 h-auto py-3"
               >
                 <Moon className="h-4 w-4" />
@@ -237,7 +171,7 @@ export function ThemeManager({ config, setConfig }: ThemeManagerProps) {
               <Button
                 variant={config.mode === "auto" ? "default" : "outline"}
                 size="sm"
-                onClick={() => updateConfig("mode", "auto")}
+                onClick={() => handleUpdateConfig("mode", "auto")}
                 className="flex flex-col gap-1 h-auto py-3"
               >
                 <Monitor className="h-4 w-4" />
@@ -264,7 +198,7 @@ export function ThemeManager({ config, setConfig }: ThemeManagerProps) {
               </div>
               <Switch
                 checked={config.effects.animations}
-                onCheckedChange={(checked: boolean) => updateNestedConfig("effects", "animations", checked)}
+                onCheckedChange={(checked) => handleUpdateNestedConfig("effects", "animations", checked)}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -274,7 +208,7 @@ export function ThemeManager({ config, setConfig }: ThemeManagerProps) {
               </div>
               <Switch
                 checked={config.effects.shadows}
-                onCheckedChange={(checked: boolean) => updateNestedConfig("effects", "shadows", checked)}
+                onCheckedChange={(checked) => handleUpdateNestedConfig("effects", "shadows", checked)}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -284,7 +218,7 @@ export function ThemeManager({ config, setConfig }: ThemeManagerProps) {
               </div>
               <Switch
                 checked={config.effects.blur}
-                onCheckedChange={(checked: boolean) => updateNestedConfig("effects", "blur", checked)}
+                onCheckedChange={(checked) => handleUpdateNestedConfig("effects", "blur", checked)}
               />
             </div>
           </CardContent>
@@ -302,12 +236,11 @@ export function ThemeManager({ config, setConfig }: ThemeManagerProps) {
             {presetThemes.map((theme) => (
               <div
                 key={theme.id}
-                className={cn(
-                  "p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md",
+                className={`p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${
                   config.preset === theme.id 
-                    ? "border-primary bg-primary/5" 
-                    : "border-border hover:border-primary/50"
-                )}
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-border hover:border-primary/50'
+                }`}
                 onClick={() => applyPreset(theme.id)}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -347,30 +280,62 @@ export function ThemeManager({ config, setConfig }: ThemeManagerProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <ColorPickerInput
-              label="主色调"
-              color={config.customColors.primary}
-              onChange={(color) => updateNestedConfig("customColors", "primary", color)}
-              pickerId="primary"
-              activePicker={activeColorPicker}
-              setActivePicker={setActiveColorPicker}
-            />
-            <ColorPickerInput
-              label="次要色调"
-              color={config.customColors.secondary}
-              onChange={(color) => updateNestedConfig("customColors", "secondary", color)}
-              pickerId="secondary"
-              activePicker={activeColorPicker}
-              setActivePicker={setActiveColorPicker}
-            />
-            <ColorPickerInput
-              label="强调色"
-              color={config.customColors.accent}
-              onChange={(color) => updateNestedConfig("customColors", "accent", color)}
-              pickerId="accent"
-              activePicker={activeColorPicker}
-              setActivePicker={setActiveColorPicker}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="primary-color">主色调</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="primary-color"
+                  type="color"
+                  value={config.customColors.primary}
+                  onChange={(e) => handleUpdateNestedConfig("customColors", "primary", e.target.value)}
+                  className="w-12 h-10 border border-input rounded-md cursor-pointer"
+                />
+                <Input
+                  value={config.customColors.primary}
+                  onChange={(e) => handleUpdateNestedConfig("customColors", "primary", e.target.value)}
+                  placeholder="#030213"
+                  className="flex-1 font-mono"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="secondary-color">次要色调</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="secondary-color"
+                  type="color"
+                  value={config.customColors.secondary}
+                  onChange={(e) => handleUpdateNestedConfig("customColors", "secondary", e.target.value)}
+                  className="w-12 h-10 border border-input rounded-md cursor-pointer"
+                />
+                <Input
+                  value={config.customColors.secondary}
+                  onChange={(e) => handleUpdateNestedConfig("customColors", "secondary", e.target.value)}
+                  placeholder="#ececf0"
+                  className="flex-1 font-mono"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="accent-color">强调色</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="accent-color"
+                  type="color"
+                  value={config.customColors.accent}
+                  onChange={(e) => handleUpdateNestedConfig("customColors", "accent", e.target.value)}
+                  className="w-12 h-10 border border-input rounded-md cursor-pointer"
+                />
+                <Input
+                  value={config.customColors.accent}
+                  onChange={(e) => handleUpdateNestedConfig("customColors", "accent", e.target.value)}
+                  placeholder="#e9ebef"
+                  className="flex-1 font-mono"
+                />
+              </div>
+            </div>
           </div>
           
           <div className="pt-4 border-t">
@@ -418,7 +383,7 @@ export function ThemeManager({ config, setConfig }: ThemeManagerProps) {
             </div>
             <Switch
               checked={config.accessibility.highContrast}
-              onCheckedChange={(checked: boolean) => updateNestedConfig("accessibility", "highContrast", checked)}
+              onCheckedChange={(checked) => handleUpdateNestedConfig("accessibility", "highContrast", checked)}
             />
           </div>
           
@@ -429,7 +394,7 @@ export function ThemeManager({ config, setConfig }: ThemeManagerProps) {
             </div>
             <Switch
               checked={config.accessibility.reducedMotion}
-              onCheckedChange={(checked: boolean) => updateNestedConfig("accessibility", "reducedMotion", checked)}
+              onCheckedChange={(checked) => handleUpdateNestedConfig("accessibility", "reducedMotion", checked)}
             />
           </div>
 
@@ -442,7 +407,7 @@ export function ThemeManager({ config, setConfig }: ThemeManagerProps) {
             </div>
             <Slider
               value={[config.accessibility.fontSize]}
-              onValueChange={(value: number[]) => updateNestedConfig("accessibility", "fontSize", value[0])}
+              onValueChange={(value) => handleUpdateNestedConfig("accessibility", "fontSize", value[0])}
               min={12}
               max={24}
               step={1}
@@ -456,57 +421,6 @@ export function ThemeManager({ config, setConfig }: ThemeManagerProps) {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
-}
-
-interface ColorPickerInputProps {
-  label: string;
-  color: string;
-  onChange: (color: string) => void;
-  pickerId: string;
-  activePicker: string | null;
-  setActivePicker: (id: string | null) => void;
-}
-
-function ColorPickerInput({
-  label,
-  color,
-  onChange,
-  pickerId,
-  activePicker,
-  setActivePicker
-}: ColorPickerInputProps) {
-  const handleColorChange = (colorResult: ColorResult) => {
-    onChange(colorResult.hex);
-  };
-
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      <div className="flex items-center gap-2">
-        <Popover open={activePicker === pickerId} onOpenChange={(isOpen) => setActivePicker(isOpen ? pickerId : null)}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-12 h-10 p-0 border border-input rounded-md cursor-pointer"
-              style={{ backgroundColor: color }}
-            />
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <SketchPicker
-              color={color}
-              onChangeComplete={handleColorChange}
-            />
-          </PopoverContent>
-        </Popover>
-        <Input
-          value={color}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="#000000"
-          className="flex-1 font-mono"
-        />
-      </div>
     </div>
   );
 }

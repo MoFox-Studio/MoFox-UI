@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Slot } from "@radix-ui/react-slot";
-import { VariantProps, cva } from "class-variance-authority";
-import { PanelLeftIcon } from "lucide-react";
+import { Slot } from "@radix-ui/react-slot@1.1.2";
+import { VariantProps, cva } from "class-variance-authority@0.7.1";
+import { PanelLeftIcon } from "lucide-react@0.487.0";
 
 import { useIsMobile } from "./use-mobile";
 import { cn } from "./utils";
@@ -61,7 +61,7 @@ function SidebarProvider({
   style,
   children,
   ...props
-}: React.HTMLAttributes<HTMLDivElement> & {
+}: React.ComponentProps<"div"> & {
   defaultOpen?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -158,7 +158,7 @@ function Sidebar({
   className,
   children,
   ...props
-}: React.HTMLAttributes<HTMLDivElement> & {
+}: React.ComponentProps<"div"> & {
   side?: "left" | "right";
   variant?: "sidebar" | "floating" | "inset";
   collapsible?: "offcanvas" | "icon" | "none";
@@ -267,7 +267,7 @@ function SidebarTrigger({
       variant="ghost"
       size="icon"
       className={cn("size-7", className)}
-      onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+      onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
       }}
@@ -304,7 +304,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   );
 }
 
-function SidebarInset({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
+function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   return (
     <main
       data-slot="sidebar-inset"
@@ -332,7 +332,7 @@ function SidebarInput({
   );
 }
 
-function SidebarHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sidebar-header"
@@ -343,7 +343,7 @@ function SidebarHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElem
   );
 }
 
-function SidebarFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sidebar-footer"
@@ -368,7 +368,7 @@ function SidebarSeparator({
   );
 }
 
-function SidebarContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sidebar-content"
@@ -382,7 +382,7 @@ function SidebarContent({ className, ...props }: React.HTMLAttributes<HTMLDivEle
   );
 }
 
-function SidebarGroup({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sidebar-group"
@@ -397,7 +397,7 @@ function SidebarGroupLabel({
   className,
   asChild = false,
   ...props
-}: React.HTMLAttributes<HTMLDivElement> & { asChild?: boolean }) {
+}: React.ComponentProps<"div"> & { asChild?: boolean }) {
   const Comp = asChild ? Slot : "div";
 
   return (
@@ -440,7 +440,7 @@ function SidebarGroupAction({
 function SidebarGroupContent({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+}: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sidebar-group-content"
@@ -451,7 +451,7 @@ function SidebarGroupContent({
   );
 }
 
-function SidebarMenu({ className, ...props }: React.HTMLAttributes<HTMLUListElement>) {
+function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
   return (
     <ul
       data-slot="sidebar-menu"
@@ -462,7 +462,7 @@ function SidebarMenu({ className, ...props }: React.HTMLAttributes<HTMLUListElem
   );
 }
 
-function SidebarMenuItem({ className, ...props }: React.HTMLAttributes<HTMLLIElement>) {
+function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
   return (
     <li
       data-slot="sidebar-menu-item"
@@ -503,7 +503,7 @@ function SidebarMenuButton({
   tooltip,
   className,
   ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+}: React.ComponentProps<"button"> & {
   asChild?: boolean;
   isActive?: boolean;
   tooltip?: string | React.ComponentProps<typeof TooltipContent>;
@@ -550,7 +550,7 @@ function SidebarMenuAction({
   asChild = false,
   showOnHover = false,
   ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+}: React.ComponentProps<"button"> & {
   asChild?: boolean;
   showOnHover?: boolean;
 }) {
@@ -580,7 +580,7 @@ function SidebarMenuAction({
 function SidebarMenuBadge({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+}: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sidebar-menu-badge"
@@ -603,7 +603,7 @@ function SidebarMenuSkeleton({
   className,
   showIcon = false,
   ...props
-}: React.HTMLAttributes<HTMLDivElement> & {
+}: React.ComponentProps<"div"> & {
   showIcon?: boolean;
 }) {
   // Random width between 50 to 90%.
@@ -637,7 +637,7 @@ function SidebarMenuSkeleton({
   );
 }
 
-function SidebarMenuSub({ className, ...props }: React.HTMLAttributes<HTMLUListElement>) {
+function SidebarMenuSub({ className, ...props }: React.ComponentProps<"ul">) {
   return (
     <ul
       data-slot="sidebar-menu-sub"
@@ -655,7 +655,7 @@ function SidebarMenuSub({ className, ...props }: React.HTMLAttributes<HTMLUListE
 function SidebarMenuSubItem({
   className,
   ...props
-}: React.HTMLAttributes<HTMLLIElement>) {
+}: React.ComponentProps<"li">) {
   return (
     <li
       data-slot="sidebar-menu-sub-item"
@@ -672,7 +672,7 @@ function SidebarMenuSubButton({
   isActive = false,
   className,
   ...props
-}: React.AnchorHTMLAttributes<HTMLAnchorElement> & {
+}: React.ComponentProps<"a"> & {
   asChild?: boolean;
   size?: "sm" | "md";
   isActive?: boolean;

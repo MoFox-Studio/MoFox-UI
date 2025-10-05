@@ -1,16 +1,14 @@
-import { useState, useEffect, useRef } from "react";
-import { PowerPredictionChart } from "./PowerPredictionChart"; // 导入新组件
-import { Bot, Power } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import { ScrollArea } from "./ui/scroll-area";
 import { Button } from "./ui/button";
-import {
-  Activity,
-  Users,
-  MessageCircle,
-  Brain,
+import { 
+  Activity, 
+  Users, 
+  MessageCircle, 
+  Brain, 
   Server,
   TrendingUp,
   Clock,
@@ -18,7 +16,7 @@ import {
   CheckCircle,
   ExternalLink
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "sonner@2.0.3";
 
 interface LogEntry {
   id: string;
@@ -29,12 +27,10 @@ interface LogEntry {
 }
 
 interface DashboardProps {
-  directoryName?: string | null;
   onNavigateToLogs: () => void;
 }
 
-export function Dashboard({ directoryName, onNavigateToLogs }: DashboardProps) {
-  const chartRef = useRef<HTMLDivElement>(null);
+export function Dashboard({ onNavigateToLogs }: DashboardProps) {
   const [stats, setStats] = useState({
     totalUsers: 1247,
     activeUsers: 89,
@@ -84,8 +80,6 @@ export function Dashboard({ directoryName, onNavigateToLogs }: DashboardProps) {
     }
   ]);
 
-  const [botUptime, setBotUptime] = useState("未知");
-
   // 模拟实时数据更新
   useEffect(() => {
     const interval = setInterval(() => {
@@ -103,7 +97,7 @@ export function Dashboard({ directoryName, onNavigateToLogs }: DashboardProps) {
       const levels: LogEntry["level"][] = ["DEBUG", "INFO", "WARN"];
       const messages = [
         "处理用户消息",
-        "AI模型调用完成",
+        "AI模型调用完成", 
         "数据库查询成功",
         "内存清理完成",
         "系统运行正常"
@@ -122,14 +116,6 @@ export function Dashboard({ directoryName, onNavigateToLogs }: DashboardProps) {
 
     return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    if (directoryName) {
-      setBotUptime("正在加载..."); // Placeholder, will be improved later
-    } else {
-      setBotUptime("未选择目录");
-    }
-  }, [directoryName]);
 
   const getLevelColor = (level: LogEntry["level"]) => {
     switch (level) {
@@ -151,56 +137,18 @@ export function Dashboard({ directoryName, onNavigateToLogs }: DashboardProps) {
     }
   };
 
-  const handleRestartWebUIClick = async () => {
-    toast.info("正在重新加载页面...");
-    window.location.reload();
-  };
-
-  const handleRestartBotClick = async () => {
-    toast.error("此功能在网页版中不可用。");
-  };
-
   // 快速操作处理函数
   const handleQuickAction = (action: string) => {
     switch (action) {
       case "restart":
-        toast.info(
-          <>
-            重启 <strong className="italic">WebUI</strong> 服务
-          </>,
-          {
-            description: "点击按钮以重启 WebUI 界面。",
-            action: (
-              <Button
-                size="sm"
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-                onClick={handleRestartWebUIClick}
-              >
-                <Power className="h-4 w-4 mr-1" /> 重启
-              </Button>
-            ),
-          }
-        );
-        toast.info(
-          <>
-            重启 <strong className="italic">MoFox-bot</strong> 服务
-          </>,
-          {
-            description: "点击按钮以重启机器人核心服务。",
-            action: (
-              <Button
-                size="sm"
-                className="bg-sky-500 hover:bg-sky-600 text-white"
-                onClick={handleRestartBotClick}
-              >
-                <Bot className="h-4 w-4 mr-1" /> 重启
-              </Button>
-            ),
-          }
-        );
+        toast.success("正在重启服务...", {
+          description: "服务将在30秒内重新启动"
+        });
         break;
       case "performance":
-        chartRef.current?.scrollIntoView({ behavior: "smooth" });
+        toast.info("性能分析功能", {
+          description: "此功能正在开发中，敬请期待"
+        });
         break;
       case "users":
         toast.info("用户管理功能", {
@@ -229,7 +177,7 @@ export function Dashboard({ directoryName, onNavigateToLogs }: DashboardProps) {
       {/* 欢迎区域 */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">控制台概览</h2>
+          <h2>控制台概览</h2>
           <p className="text-muted-foreground">
             监控MoFox Bot的运行状态和关键指标
           </p>
@@ -312,9 +260,9 @@ export function Dashboard({ directoryName, onNavigateToLogs }: DashboardProps) {
                 <span>内存使用率</span>
                 <span>{stats.memoryUsage}%</span>
               </div>
-              <Progress
-                value={stats.memoryUsage}
-                className="h-2 cursor-pointer"
+              <Progress 
+                value={stats.memoryUsage} 
+                className="h-2 cursor-pointer" 
                 onClick={() => toast.info("内存详情", { description: `当前内存使用率: ${stats.memoryUsage}%` })}
               />
             </div>
@@ -324,9 +272,9 @@ export function Dashboard({ directoryName, onNavigateToLogs }: DashboardProps) {
                 <span>CPU使用率</span>
                 <span>{stats.cpuUsage}%</span>
               </div>
-              <Progress
-                value={stats.cpuUsage}
-                className="h-2 cursor-pointer"
+              <Progress 
+                value={stats.cpuUsage} 
+                className="h-2 cursor-pointer" 
                 onClick={() => toast.info("CPU详情", { description: `当前CPU使用率: ${stats.cpuUsage}%` })}
               />
             </div>
@@ -336,31 +284,22 @@ export function Dashboard({ directoryName, onNavigateToLogs }: DashboardProps) {
                 <span>磁盘使用率</span>
                 <span>{stats.diskUsage}%</span>
               </div>
-              <Progress
-                value={stats.diskUsage}
-                className="h-2 cursor-pointer"
+              <Progress 
+                value={stats.diskUsage} 
+                className="h-2 cursor-pointer" 
                 onClick={() => toast.info("磁盘详情", { description: `当前磁盘使用率: ${stats.diskUsage}%` })}
               />
             </div>
 
             <div className="pt-2 border-t">
-              <div
+              <div 
                 className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-                onClick={() => toast.info("系统运行时间", {
-                  description: `系统已持续运行 ${stats.systemUptime}，运行状态良好`
+                onClick={() => toast.info("系统运行时间", { 
+                  description: `系统已持续运行 ${stats.systemUptime}，运行状态良好` 
                 })}
               >
                 <Clock className="h-4 w-4" />
-                <span>系统运行: {stats.systemUptime}</span>
-              </div>
-              <div
-                className="mt-2 flex items-center gap-2 text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-                onClick={() => toast.info("Bot运行时间", {
-                  description: `Bot脚本运行时间: ${botUptime}`
-                })}
-              >
-                <Brain className="h-4 w-4" />
-                <span>Bot运行: {botUptime}</span>
+                <span>运行时间: {stats.systemUptime}</span>
               </div>
             </div>
           </CardContent>
@@ -469,11 +408,6 @@ export function Dashboard({ directoryName, onNavigateToLogs }: DashboardProps) {
           </div>
         </CardContent>
       </Card>
-
-      {/* 功耗预测图表 */}
-      <div ref={chartRef}>
-        <PowerPredictionChart />
-      </div>
     </div>
   );
 }

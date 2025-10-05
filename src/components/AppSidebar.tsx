@@ -1,6 +1,4 @@
-import React from "react";
-import { toast } from "sonner";
-import { Settings, Terminal, Palette, Bot, LayoutDashboard, LogOut, User, Power } from "lucide-react";
+import { Settings, Terminal, Palette, Bot, LayoutDashboard, LogOut, User, BarChart3, Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -14,7 +12,6 @@ import {
   SidebarFooter,
 } from "./ui/sidebar";
 import { Button } from "./ui/button";
-import { Separator } from "./ui/separator";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -24,6 +21,18 @@ import {
   DropdownMenuTrigger 
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "./ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
+import { useState } from "react";
+import { toast } from "sonner@2.0.3";
 
 interface AppSidebarProps {
   activeSection: string;
@@ -56,72 +65,48 @@ const navigationItems = [
     description: "实时日志监控"
   },
   {
+    id: "statistics",
+    title: "聊天统计",
+    icon: BarChart3,
+    description: "消息数据与分析"
+  },
+  {
+    id: "users",
+    title: "用户管理",
+    icon: Users,
+    description: "管理用户账户与权限"
+  },
+  {
     id: "theme",
     title: "主题设置",
     icon: Palette,
     description: "界面主题配置"
-  },
-  {
-    id: "admin",
-    title: "系统管理",
-    icon: User,
-    description: "系统管理与权限控制"
   }
 ];
 
 export function AppSidebar({ activeSection, onSectionChange, user, onLogout }: AppSidebarProps) {
-  const handleRestartWebUIClick = async () => {
-    toast.info("正在重启 WebUI...");
-    await window.electron.restartWebUI();
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+
+  const handleProfileClick = () => {
+    onSectionChange("profile");
   };
 
-  const handleRestartBotClick = async () => {
-    toast.error("此功能在网页版中不可用。");
+  const handleLogoutClick = () => {
+    setShowLogoutDialog(true);
   };
 
-  const showRestartToast = () => {
-    toast.info(
-      <>
-        重启 <strong className="italic">WebUI</strong> 服务
-      </>,
-      {
-        description: "点击按钮以重启 WebUI 界面。",
-        action: (
-          <Button
-            size="sm"
-            className="bg-orange-500 hover:bg-orange-600 text-white"
-            onClick={handleRestartWebUIClick}
-          >
-            <Power className="h-4 w-4 mr-1" /> 重启
-          </Button>
-        ),
-      }
-    );
-    toast.info(
-      <>
-        重启 <strong className="italic">MoFox-bot</strong> 服务
-      </>,
-      {
-        description: "点击按钮以重启机器人核心服务。",
-        action: (
-          <Button
-            size="sm"
-            className="bg-sky-500 hover:bg-sky-600 text-white"
-            onClick={handleRestartBotClick}
-          >
-            <Bot className="h-4 w-4 mr-1" /> 重启
-          </Button>
-        ),
-      }
-    );
+  const handleLogoutConfirm = () => {
+    setShowLogoutDialog(false);
+    toast.success("已安全退出登录");
+    onLogout?.();
   };
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b px-10 py-8">
+      <SidebarHeader className="border-b px-6 py-4">
         <div className="flex items-center gap-3">
-          <div className="h-16 w-16 bg-primary rounded-lg flex items-center justify-center">
-            <Bot className="h-16 w-16 text-primary-foreground" />
+          <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+            <Bot className="h-4 w-4 text-primary-foreground" />
           </div>
           <div>
             <h2 className="text-sm font-medium">MoFox Bot</h2>
@@ -135,25 +120,22 @@ export function AppSidebar({ activeSection, onSectionChange, user, onLogout }: A
           <SidebarGroupLabel>管理功能</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map((item, index) => (
-                <React.Fragment key={item.id}>
-                  {index > 0 && <Separator className="my-5" />}
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      onClick={() => onSectionChange(item.id)}
-                      isActive={activeSection === item.id}
-                      className="w-full justify-start"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <div className="flex flex-col items-start">
-                        <span>{item.title}</span>
-                        <span className="text-xs text-muted-foreground font-normal">
-                          {item.description}
-                        </span>
-                      </div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </React.Fragment>
+              {navigationItems.map((item) => (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    onClick={() => onSectionChange(item.id)}
+                    isActive={activeSection === item.id}
+                    className="w-full justify-start"
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <div className="flex flex-col items-start">
+                      <span>{item.title}</span>
+                      <span className="text-xs text-muted-foreground font-normal">
+                        {item.description}
+                      </span>
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -161,11 +143,11 @@ export function AppSidebar({ activeSection, onSectionChange, user, onLogout }: A
       </SidebarContent>
 
       {user && (
-        <SidebarFooter className="border-t p-8">
-          <DropdownMenu>
-            <DropdownMenuTrigger className="w-full">
+        <SidebarFooter className="border-t p-4">
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-start gap-3 h-auto py-3">
-                <Avatar className="h-16 w-16">
+                <Avatar className="h-8 w-8">
                   <AvatarFallback className="text-xs bg-primary text-primary-foreground">
                     {user.displayName.charAt(0).toUpperCase()}
                   </AvatarFallback>
@@ -176,19 +158,20 @@ export function AppSidebar({ activeSection, onSectionChange, user, onLogout }: A
                 </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>我的账户</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleProfileClick();
+                }}
+              >
                 <User className="mr-2 h-4 w-4" />
                 个人资料
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={showRestartToast}>
-                <Power className="mr-2 h-4 w-4" />
-                重启服务
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onLogout} className="text-red-600">
+              <DropdownMenuItem onClick={handleLogoutClick} className="text-red-600">
                 <LogOut className="mr-2 h-4 w-4" />
                 退出登录
               </DropdownMenuItem>
@@ -196,6 +179,24 @@ export function AppSidebar({ activeSection, onSectionChange, user, onLogout }: A
           </DropdownMenu>
         </SidebarFooter>
       )}
+
+      {/* 退出登录确认对话框 */}
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认退出</AlertDialogTitle>
+            <AlertDialogDescription>
+              您确定要退出登录吗？这将清除您当前的登录状态。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogoutConfirm} className="bg-red-600 hover:bg-red-700">
+              确认退出
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sidebar>
   );
 }
