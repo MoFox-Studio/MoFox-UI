@@ -2283,6 +2283,27 @@ ${key} = ${formattedValue}
       return false;
     }
   });
+  electron.ipcMain.handle("get-system-usage", async () => {
+    // 获取 CPU 占用率
+    const cpus = os.cpus();
+    let totalIdle = 0, totalTick = 0;
+    cpus.forEach(cpu => {
+      for (let type in cpu.times) {
+        totalTick += cpu.times[type];
+      }
+      totalIdle += cpu.times.idle;
+    });
+    const idle = totalIdle / cpus.length;
+    const total = totalTick / cpus.length;
+    const cpuUsage = 100 - Math.round(100 * idle / total);
+
+    // 获取内存占用率
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const memUsage = Math.round(100 * (totalMem - freeMem) / totalMem);
+
+    return { cpu: cpuUsage, memory: memUsage };
+  });
   createWindow();
   electron.app.on("activate", () => {
     if (electron.BrowserWindow.getAllWindows().length === 0) {
