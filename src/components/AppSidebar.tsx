@@ -1,4 +1,4 @@
-import { Settings, Terminal, Palette, Bot, LayoutDashboard, LogOut, User, BarChart3, Users } from "lucide-react";
+import { Settings, Terminal, Palette, Bot, LayoutDashboard, LogOut, User, BarChart3 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -32,7 +32,7 @@ import {
   AlertDialogTitle,
 } from "./ui/alert-dialog";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "sonner@2.0.3";
 
 interface AppSidebarProps {
   activeSection: string;
@@ -70,12 +70,7 @@ const navigationItems = [
     icon: BarChart3,
     description: "消息数据与分析"
   },
-  {
-    id: "users",
-    title: "用户管理",
-    icon: Users,
-    description: "管理用户账户与权限"
-  },
+
   {
     id: "theme",
     title: "主题设置",
@@ -144,7 +139,7 @@ export function AppSidebar({ activeSection, onSectionChange, user, onLogout }: A
 
       {user && (
         <SidebarFooter className="border-t p-4">
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-start gap-3 h-auto py-3">
                 <Avatar className="h-8 w-8">
@@ -162,7 +157,7 @@ export function AppSidebar({ activeSection, onSectionChange, user, onLogout }: A
               <DropdownMenuLabel>我的账户</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
-                onClick={(e: React.MouseEvent) => {
+                onClick={(e) => {
                   e.preventDefault();
                   handleProfileClick();
                 }}

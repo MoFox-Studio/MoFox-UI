@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import * as toml from 'toml';
+import { useState } from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
@@ -9,51 +8,24 @@ import { Badge } from "../ui/badge";
 import { Separator } from "../ui/separator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Plus, X, Shield, Users, Ban } from "lucide-react";
-import { toast } from "sonner";
 
-interface SecurityConfigProps {
-  tomlContent: string;
-  onSave: (newTomlContent: string) => void;
-}
-
-const initialSecurityConfig = {
-  master_users: [] as [string, string][],
-  anti_injection: {
-    enabled: true,
-    process_mode: "counter_attack",
-    whitelist: [] as [string, string][],
-    auto_ban_enabled: true,
-    auto_ban_violation_threshold: 3,
-  }
-};
-
-export function SecurityConfig({ tomlContent, onSave }: SecurityConfigProps) {
-  const [config, setConfig] = useState(initialSecurityConfig);
-
-  useEffect(() => {
-    if (tomlContent) {
-      try {
-        const parsedToml = toml.parse(tomlContent);
-        const permission = parsedToml.permission || {};
-        const antiInjection = parsedToml.anti_injection || {};
-        
-        setConfig({
-          master_users: permission.master_users || [],
-          anti_injection: {
-            ...initialSecurityConfig.anti_injection,
-            ...antiInjection,
-          },
-        });
-      } catch (e: any) {
-        console.error("KILO-CODE-DEBUG: Error parsing TOML in SecurityConfig.tsx. Full error object:", e);
-        const match = e.message.match(/at line (\d+) column (\d+)/);
-        const description = match
-          ? `语法错误: ${e.message.split(' at line')[0]} (行: ${match[1]}, 列: ${match[2]})`
-          : `语法错误: ${e.message}`;
-        toast.error("解析 SecurityConfig 失败", { description, duration: 10000 });
-      }
+export function SecurityConfig() {
+  const [config, setConfig] = useState({
+    // 权限管理
+    master_users: [
+      ["qq", "123456"],
+      ["telegram", "user789"]
+    ],
+    
+    // 反注入与安全机制
+    anti_injection: {
+      enabled: true,
+      process_mode: "strict",
+      whitelist: ["admin123", "trusted_user"],
+      auto_ban_enabled: true,
+      auto_ban_violation_threshold: 3,
     }
-  }, [tomlContent]);
+  });
 
   const [newMasterPlatform, setNewMasterPlatform] = useState("qq");
   const [newMasterUser, setNewMasterUser] = useState("");
@@ -94,53 +66,16 @@ export function SecurityConfig({ tomlContent, onSave }: SecurityConfigProps) {
   };
 
   const addWhitelistUser = () => {
-    // This UI doesn't match the TOML structure for whitelist, so we disable adding/removing through UI
-    // to prevent corruption. Users should edit complex arrays directly if needed.
+    if (newWhitelistUser.trim() && !config.anti_injection.whitelist.includes(newWhitelistUser.trim())) {
+      updateAntiInjection("whitelist", [...config.anti_injection.whitelist, newWhitelistUser.trim()]);
+      setNewWhitelistUser("");
+    }
   };
 
-  const removeWhitelistUser = (platform: string, userId: string) => {
-     updateAntiInjection("whitelist",
-      config.anti_injection.whitelist.filter(([p, u]) => !(p === platform && u === userId))
+  const removeWhitelistUser = (userId: string) => {
+    updateAntiInjection("whitelist", 
+      config.anti_injection.whitelist.filter(u => u !== userId)
     );
-  };
-
-  const handleSave = () => {
-    let updatedToml = tomlContent;
-
-    const updateValue = (section: string, key: string, value: any) => {
-      let valueStr;
-      if (typeof value === 'string') {
-        valueStr = `"${value.replace(/"/g, '\\"')}"`;
-      } else if (Array.isArray(value)) {
-        const formattedArray = value.map(item => {
-          if (Array.isArray(item)) {
-            return `[${item.map(sub => `'${sub}'`).join(', ')}]`;
-          }
-          return `"${item}"`;
-        }).join(', ');
-        valueStr = `[${formattedArray}]`;
-      } else {
-        valueStr = value;
-      }
-      
-      const regex = new RegExp(`(\\[${section}\\][\\s\\S]*?${key}\\s*=\\s*)[^\\n#]*`);
-      if (regex.test(updatedToml)) {
-        updatedToml = updatedToml.replace(regex, `$1${valueStr}`);
-      }
-    };
-    
-    // Update permission
-    updateValue('permission', 'master_users', config.master_users);
-    
-    // Update anti_injection
-    updateValue('anti_injection', 'enabled', config.anti_injection.enabled);
-    updateValue('anti_injection', 'process_mode', config.anti_injection.process_mode);
-    updateValue('anti_injection', 'whitelist', config.anti_injection.whitelist);
-    updateValue('anti_injection', 'auto_ban_enabled', config.anti_injection.auto_ban_enabled);
-    updateValue('anti_injection', 'auto_ban_violation_threshold', config.anti_injection.auto_ban_violation_threshold);
-
-    onSave(updatedToml);
-    toast.success("安全配置已保存！");
   };
 
   const platformColors = {
@@ -163,7 +98,7 @@ export function SecurityConfig({ tomlContent, onSave }: SecurityConfigProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">
-            <Label htmlFor="new-master-user-input">Master 用户列表</Label>
+            <Label>Master 用户列表</Label>
             <div className="space-y-2">
               {config.master_users.map(([platform, userId], index) => (
                 <div key={index} className="flex items-center gap-2 p-2 border rounded-lg">
@@ -185,7 +120,7 @@ export function SecurityConfig({ tomlContent, onSave }: SecurityConfigProps) {
             </div>
             
             <div className="flex gap-2">
-              <Select value={newMasterPlatform} onValueChange={(value: string) => setNewMasterPlatform(value)}>
+              <Select value={newMasterPlatform} onValueChange={setNewMasterPlatform}>
                 <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>
@@ -197,7 +132,6 @@ export function SecurityConfig({ tomlContent, onSave }: SecurityConfigProps) {
                 </SelectContent>
               </Select>
               <Input
-                id="new-master-user-input"
                 value={newMasterUser}
                 onChange={(e) => setNewMasterUser(e.target.value)}
                 placeholder="用户ID"
@@ -227,15 +161,14 @@ export function SecurityConfig({ tomlContent, onSave }: SecurityConfigProps) {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="enable-anti-injection">启用反注入系统</Label>
+              <Label>启用反注入系统</Label>
               <p className="text-sm text-muted-foreground">
                 检测和阻止恶意注入攻击
               </p>
             </div>
             <Switch
-              id="enable-anti-injection"
               checked={config.anti_injection.enabled}
-              onCheckedChange={(checked: boolean) => updateAntiInjection("enabled", checked)}
+              onCheckedChange={(checked) => updateAntiInjection("enabled", checked)}
             />
           </div>
 
@@ -245,17 +178,17 @@ export function SecurityConfig({ tomlContent, onSave }: SecurityConfigProps) {
               
               <div className="space-y-2">
                 <Label htmlFor="process-mode">处理模式</Label>
-                <Select
-                  value={config.anti_injection.process_mode}
-                  onValueChange={(value: string) => updateAntiInjection("process_mode", value)}
+                <Select 
+                  value={config.anti_injection.process_mode} 
+                  onValueChange={(value) => updateAntiInjection("process_mode", value)}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="counter_attack">反击模式</SelectItem>
-                   <SelectItem value="strict">严格模式</SelectItem>
-                   <SelectItem value="learning">学习模式</SelectItem>
+                    <SelectItem value="strict">严格模式</SelectItem>
+                    <SelectItem value="lenient">宽松模式</SelectItem>
+                    <SelectItem value="learning">学习模式</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">
@@ -264,31 +197,24 @@ export function SecurityConfig({ tomlContent, onSave }: SecurityConfigProps) {
               </div>
 
               <div className="space-y-3">
-                <Label htmlFor="new-whitelist-user-input">白名单用户</Label>
+                <Label>白名单用户</Label>
                 <div className="flex flex-wrap gap-2 mb-2">
-                 <div className="space-y-2">
-                  {config.anti_injection.whitelist.map(([platform, userId], index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 border rounded-lg">
-                      <div className={`h-2 w-2 rounded-full ${platformColors[platform as keyof typeof platformColors] || "bg-gray-500"}`} />
-                      <Badge variant="outline" className="text-xs">
-                        {platform.toUpperCase()}
-                      </Badge>
-                      <span className="flex-1 font-mono text-sm">{userId}</span>
+                  {config.anti_injection.whitelist.map((userId) => (
+                    <Badge key={userId} variant="secondary" className="flex items-center gap-1">
+                      {userId}
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-auto p-1 hover:bg-destructive hover:text-destructive-foreground"
-                        onClick={() => removeWhitelistUser(platform, userId)}
+                        className="h-auto p-0.5 hover:bg-destructive hover:text-destructive-foreground"
+                        onClick={() => removeWhitelistUser(userId)}
                       >
                         <X className="h-3 w-3" />
                       </Button>
-                    </div>
+                    </Badge>
                   ))}
-                </div>
                 </div>
                 <div className="flex gap-2">
                   <Input
-                    id="new-whitelist-user-input"
                     value={newWhitelistUser}
                     onChange={(e) => setNewWhitelistUser(e.target.value)}
                     placeholder="添加白名单用户ID"
@@ -313,15 +239,14 @@ export function SecurityConfig({ tomlContent, onSave }: SecurityConfigProps) {
                 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="enable-auto-ban">启用自动封禁</Label>
+                    <Label>启用自动封禁</Label>
                     <p className="text-sm text-muted-foreground">
                       达到违规阈值时自动封禁用户
                     </p>
                   </div>
                   <Switch
-                    id="enable-auto-ban"
                     checked={config.anti_injection.auto_ban_enabled}
-                    onCheckedChange={(checked: boolean) => updateAntiInjection("auto_ban_enabled", checked)}
+                    onCheckedChange={(checked) => updateAntiInjection("auto_ban_enabled", checked)}
                   />
                 </div>
 

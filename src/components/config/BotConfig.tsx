@@ -1,6 +1,5 @@
-    import { useState, useEffect } from "react";
-    import * as toml from 'toml';
-    import { Label } from "../ui/label";
+import { useState } from "react";
+import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
@@ -9,126 +8,45 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Separator } from "../ui/separator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Plus, X, AlertTriangle, Save } from "lucide-react";
-import { toast } from "sonner";
+import { Plus, X, AlertTriangle } from "lucide-react";
 
-interface BotConfigProps {
-  tomlContent: string;
-  onSave: (newTomlContent: string) => void;
-  botTomlPath: string;
-}
-
-interface BotConfigState {
-  platform: string;
-  qq_account: string;
-  nickname: string;
-  alias_names: string[];
-  command_prefixes: string[];
-  allow_reply_self: boolean;
-  max_context_size: number;
-  thinking_timeout: number;
-  express_mode: string;
-  interruption_enabled: boolean;
-  interruption_max_limit: number;
-  interruption_probability_factor: number;
-  dynamic_distribution_enabled: boolean;
-  dynamic_distribution_base_interval: number;
-  max_concurrent_distributions: number;
-  host: string;
-  port: number;
-  eula_confirmed: boolean;
-}
-
-const defaultConfigState: BotConfigState = {
-  platform: "qq",
-  qq_account: "",
-  nickname: "MoFox",
-  alias_names: [],
-  command_prefixes: ["/"],
-  allow_reply_self: false,
-  max_context_size: 10,
-  thinking_timeout: 30,
-  express_mode: "llm",
-  interruption_enabled: true,
-  interruption_max_limit: 3,
-  interruption_probability_factor: 0.3,
-  dynamic_distribution_enabled: true,
-  dynamic_distribution_base_interval: 60,
-  max_concurrent_distributions: 5,
-  host: "0.0.0.0",
-  port: 8080,
-  eula_confirmed: false,
-};
-
-export function BotConfig({ tomlContent, onSave, botTomlPath }: BotConfigProps) {
-  const [config, setConfig] = useState<BotConfigState>(defaultConfigState);
-
-  useEffect(() => {
-    if (tomlContent) {
-      try {
-        const parsedToml = toml.parse(tomlContent);
-        const botConfig = parsedToml.bot || {};
-        const commandConfig = parsedToml.command || {};
-        const chatConfig = parsedToml.chat || {};
-
-        setConfig(prevConfig => ({
-          ...prevConfig,
-          ...botConfig,
-          ...commandConfig,
-          ...chatConfig,
-        }));
-      } catch (e: any) {
-        console.error("KILO-CODE-DEBUG: Error parsing TOML in BotConfig.tsx. Full error object:", e);
-        const match = e.message.match(/at line (\d+) column (\d+)/);
-        const description = match
-          ? `语法错误: ${e.message.split(' at line')[0]} (行: ${match[1]}, 列: ${match[2]})`
-          : `语法错误: ${e.message}`;
-        toast.error("解析 BotConfig 失败", { description, duration: 10000 });
-      }
-    }
-  }, [tomlContent]);
+export function BotConfig() {
+  const [config, setConfig] = useState({
+    // Bot 基础配置
+    platform: "qq",
+    qq_account: "123456789",
+    nickname: "MoFox",
+    alias_names: ["小狐", "狐狐", "MoFox"],
+    
+    // 命令配置
+    command_prefixes: ["/", "!", "#"],
+    
+    // 聊天设置
+    allow_reply_self: false,
+    max_context_size: 10,
+    thinking_timeout: 30,
+    
+    // 表达方式学习方法
+    express_mode: "llm",
+    
+    // 消息打断系统
+    interruption_enabled: true,
+    interruption_max_limit: 3,
+    interruption_probability_factor: 0.3,
+    
+    // 动态消息分发
+    dynamic_distribution_enabled: true,
+    dynamic_distribution_base_interval: 60,
+    max_concurrent_distributions: 5,
+    
+    // 环境变量
+    host: "0.0.0.0",
+    port: 8080,
+    eula_confirmed: false,
+  });
 
   const [newAlias, setNewAlias] = useState("");
   const [newPrefix, setNewPrefix] = useState("");
-
-  const handleSave = () => {
-    let updatedToml = tomlContent;
-
-    const updateValue = (section: string, key: string, value: any) => {
-      const valueStr = typeof value === 'string' ? `"${value}"` : Array.isArray(value) ? `[${value.map(v => `"${v}"`).join(", ")}]` : value;
-      const regex = new RegExp(`(\\[${section}\\][\\s\\S]*?${key}\\s*=\\s*)[^\\n]+`);
-      if (regex.test(updatedToml)) {
-        updatedToml = updatedToml.replace(regex, `$1${valueStr}`);
-      }
-    };
-    
-    // [bot]
-    updateValue('bot', 'platform', config.platform);
-    updateValue('bot', 'qq_account', config.qq_account);
-    updateValue('bot', 'nickname', config.nickname);
-    updateValue('bot', 'alias_names', config.alias_names);
-    updateValue('bot', 'host', config.host);
-    updateValue('bot', 'port', config.port);
-    updateValue('bot', 'eula_confirmed', config.eula_confirmed);
-    
-    // [command]
-    updateValue('command', 'command_prefixes', config.command_prefixes);
-
-    // [chat]
-    updateValue('chat', 'allow_reply_self', config.allow_reply_self);
-    updateValue('chat', 'max_context_size', config.max_context_size);
-    updateValue('chat', 'thinking_timeout', config.thinking_timeout);
-    updateValue('chat', 'express_mode', config.express_mode);
-    updateValue('chat', 'interruption_enabled', config.interruption_enabled);
-    updateValue('chat', 'interruption_max_limit', config.interruption_max_limit);
-    updateValue('chat', 'interruption_probability_factor', config.interruption_probability_factor);
-    updateValue('chat', 'dynamic_distribution_enabled', config.dynamic_distribution_enabled);
-    updateValue('chat', 'dynamic_distribution_base_interval', config.dynamic_distribution_base_interval);
-    updateValue('chat', 'max_concurrent_distributions', config.max_concurrent_distributions);
-
-    onSave(updatedToml);
-    toast.success("Bot 配置已保存！");
-  };
 
   const updateConfig = (key: string, value: any) => {
     setConfig(prev => ({ ...prev, [key]: value }));
@@ -168,7 +86,7 @@ export function BotConfig({ tomlContent, onSave, botTomlPath }: BotConfigProps) 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="platform">平台类型</Label>
-              <Select value={config.platform} onValueChange={(value: string) => updateConfig("platform", value)}>
+              <Select value={config.platform} onValueChange={(value) => updateConfig("platform", value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -202,7 +120,7 @@ export function BotConfig({ tomlContent, onSave, botTomlPath }: BotConfigProps) 
           </div>
 
           <div className="space-y-3">
-            <Label htmlFor="new-alias-input">别名列表</Label>
+            <Label>别名列表</Label>
             <div className="flex flex-wrap gap-2 mb-2">
               {config.alias_names.map((alias) => (
                 <Badge key={alias} variant="secondary" className="flex items-center gap-1">
@@ -220,7 +138,6 @@ export function BotConfig({ tomlContent, onSave, botTomlPath }: BotConfigProps) 
             </div>
             <div className="flex gap-2">
               <Input
-                id="new-alias-input"
                 value={newAlias}
                 onChange={(e) => setNewAlias(e.target.value)}
                 placeholder="添加新别名"
@@ -242,7 +159,7 @@ export function BotConfig({ tomlContent, onSave, botTomlPath }: BotConfigProps) 
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">
-            <Label htmlFor="new-prefix-input">命令前缀</Label>
+            <Label>命令前缀</Label>
             <div className="flex flex-wrap gap-2 mb-2">
               {config.command_prefixes.map((prefix) => (
                 <Badge key={prefix} variant="outline" className="flex items-center gap-1">
@@ -260,7 +177,6 @@ export function BotConfig({ tomlContent, onSave, botTomlPath }: BotConfigProps) 
             </div>
             <div className="flex gap-2">
               <Input
-                id="new-prefix-input"
                 value={newPrefix}
                 onChange={(e) => setNewPrefix(e.target.value)}
                 placeholder="添加新前缀"
@@ -284,15 +200,14 @@ export function BotConfig({ tomlContent, onSave, botTomlPath }: BotConfigProps) 
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="allow-reply-self">允许回复自己</Label>
+              <Label>允许回复自己</Label>
               <p className="text-sm text-muted-foreground">
                 机器人是否可以回复自己发送的消息
               </p>
             </div>
             <Switch
-              id="allow-reply-self"
               checked={config.allow_reply_self}
-              onCheckedChange={(checked: boolean) => updateConfig("allow_reply_self", checked)}
+              onCheckedChange={(checked) => updateConfig("allow_reply_self", checked)}
             />
           </div>
 
@@ -325,7 +240,7 @@ export function BotConfig({ tomlContent, onSave, botTomlPath }: BotConfigProps) 
 
           <div className="space-y-3">
             <Label htmlFor="express-mode">表达方式学习方法</Label>
-            <Select value={config.express_mode} onValueChange={(value: string) => updateConfig("express_mode", value)}>
+            <Select value={config.express_mode} onValueChange={(value) => updateConfig("express_mode", value)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -374,15 +289,14 @@ export function BotConfig({ tomlContent, onSave, botTomlPath }: BotConfigProps) 
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="enable-interruption">启用消息打断</Label>
+              <Label>启用消息打断</Label>
               <p className="text-sm text-muted-foreground">
                 允许新消息打断正在生成的回复
               </p>
             </div>
             <Switch
-              id="enable-interruption"
               checked={config.interruption_enabled}
-              onCheckedChange={(checked: boolean) => updateConfig("interruption_enabled", checked)}
+              onCheckedChange={(checked) => updateConfig("interruption_enabled", checked)}
             />
           </div>
 
@@ -428,15 +342,14 @@ export function BotConfig({ tomlContent, onSave, botTomlPath }: BotConfigProps) 
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="enable-dynamic-distribution">启用动态分发</Label>
+              <Label>启用动态分发</Label>
               <p className="text-sm text-muted-foreground">
                 启用智能消息分发机制
               </p>
             </div>
             <Switch
-              id="enable-dynamic-distribution"
               checked={config.dynamic_distribution_enabled}
-              onCheckedChange={(checked: boolean) => updateConfig("dynamic_distribution_enabled", checked)}
+              onCheckedChange={(checked) => updateConfig("dynamic_distribution_enabled", checked)}
             />
           </div>
 
@@ -501,26 +414,18 @@ export function BotConfig({ tomlContent, onSave, botTomlPath }: BotConfigProps) 
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="eula-confirmed">确认用户协议</Label>
+              <Label>确认用户协议</Label>
               <p className="text-sm text-muted-foreground">
                 确认已阅读并同意用户使用协议
               </p>
             </div>
             <Switch
-              id="eula-confirmed"
               checked={config.eula_confirmed}
-              onCheckedChange={(checked: boolean) => updateConfig("eula_confirmed", checked)}
+              onCheckedChange={(checked) => updateConfig("eula_confirmed", checked)}
             />
           </div>
         </CardContent>
       </Card>
-
-      <div className="flex justify-end pt-4">
-        <Button onClick={handleSave}>
-          <Save className="mr-2 h-4 w-4" />
-          保存 Bot 配置
-        </Button>
-      </div>
     </div>
   );
 }
