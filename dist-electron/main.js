@@ -1,3 +1,4 @@
+import { ipcMain, dialog } from 'electron';
 "use strict";
 const electron = require("electron");
 const path = require("path");
@@ -2315,4 +2316,16 @@ electron.app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     electron.app.quit();
   }
+});
+ipcMain.handle('show-open-dialog', async (event, options) => {
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (!window) return null;
+
+  const result = await dialog.showOpenDialog(window, options);
+  
+  if (result.canceled || result.filePaths.length === 0) {
+    return null; // 用户取消了选择
+  }
+  
+  return result.filePaths[0]; // 返回单个文件/目录路径
 });

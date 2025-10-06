@@ -16,7 +16,8 @@ import {
   CheckCircle,
   ExternalLink
 } from "lucide-react";
-import { toast } from "sonner@2.0.3";
+import { PowerPredictionChart } from "./PowerPredictionChart";
+import { toast } from "sonner";
 
 interface LogEntry {
   id: string;
@@ -242,6 +243,9 @@ export function Dashboard({ onNavigateToLogs }: DashboardProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* 功耗预测图表 */}
+      <PowerPredictionChart />
 
       {/* 系统状态和日志 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

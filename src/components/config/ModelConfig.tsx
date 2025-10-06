@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -7,418 +7,354 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Separator } from "../ui/separator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Plus, X, Brain, Server, Zap } from "lucide-react";
+import { Plus } from "lucide-react";
+import * as toml from 'toml';
+import { ModelConfigType, ApiProvider, Model as ModelType, ModelTask } from './types';
+import { Save, Trash2 } from 'lucide-react';
+import { Switch } from '../ui/switch';
+import { Slider } from '../ui/slider';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-interface ApiProvider {
-  name: string;
-  base_url: string;
-  api_key: string;
-  timeout: number;
+interface ModelConfigProps {
+  tomlContent: string;
+  onSave: (newTomlContent: string) => void;
+  modelTomlPath: string;
 }
 
-interface Model {
-  model_identifier: string;
-  name: string;
-  api_provider: string;
-  price_in: number;
-  price_out: number;
-}
+const defaultProvider: ApiProvider = { name: "", base_url: "", api_key: [], client_type: "openai", max_retry: 2, timeout: 30, retry_interval: 10, enable_content_obfuscation: false, obfuscation_intensity: 1 };
+const defaultModel: ModelType = { model_identifier: "", name: "", api_provider: "", price_in: 0, price_out: 0, force_stream_mode: false, use_anti_truncation: false, extra_params: { enable_thinking: true } };
 
-const taskTypes = [
-  { key: "reply", name: "回复", description: "生成聊天回复" },
-  { key: "decision", name: "决策", description: "做出行为决策" },
-  { key: "emotion", name: "情绪", description: "分析情绪状态" },
-  { key: "mood", name: "心情", description: "判断心情变化" },
-  { key: "relationship", name: "关系", description: "分析用户关系" },
-  { key: "tool", name: "工具", description: "工具调用决策" },
-  { key: "schedule", name: "日程", description: "日程管理" },
-  { key: "anti_injection", name: "反注入", description: "安全检测" },
-  { key: "monthly_plan", name: "月计划", description: "制定月度计划" },
-  { key: "memory", name: "记忆", description: "记忆处理" },
-  { key: "embedding", name: "嵌入", description: "文本向量化" },
-  { key: "image", name: "图像", description: "图像理解" },
-  { key: "expression", name: "表情", description: "表情生成" },
-  { key: "video", name: "视频", description: "视频处理" },
-  { key: "voice", name: "语音", description: "语音合成" },
-  { key: "qa", name: "问答", description: "知识问答" },
-  { key: "entity", name: "实体", description: "实体识别" },
-  { key: "rdf", name: "RDF", description: "知识图谱" },
+const TASK_NAMES = [
+  "utils", "utils_small", "replyer", "planner", "emotion", "mood", "maizone",
+  "vlm", "emoji_vlm", "utils_video", "voice", "tool_use", "schedule_generator",
+  "anti_injection", "monthly_plan_generator", "relationship_tracker", "embedding",
+  "lpmm_entity_extract", "lpmm_rdf_build", "lpmm_qa"
 ];
 
-export function ModelConfig() {
-  const [providers, setProviders] = useState<ApiProvider[]>([
-    {
-      name: "OpenAI",
-      base_url: "https://api.openai.com/v1",
-      api_key: "sk-xxxxxxxxxxxxxxxx",
-      timeout: 30
-    },
-    {
-      name: "Claude",
-      base_url: "https://api.anthropic.com",
-      api_key: "sk-ant-xxxxxxxxxxxxxxxx",
-      timeout: 30
+const TASK_DESCRIPTIONS: Record<string, string> = {
+  utils: "在麦麦的一些组件中使用的模型，例如表情包模块，取名模块，关系模块，是麦麦必须的模型",
+  utils_small: "在麦麦的一些组件中使用的小模型，消耗量较大，建议使用速度较快的小模型",
+  replyer: "首要回复模型，还用于表达器和表达方式学习",
+  planner: "决策：负责决定麦麦该做什么的模型",
+  emotion: "负责麦麦的情绪变化",
+  mood: "负责麦麦的心情变化",
+  maizone: "maizone模型",
+  vlm: "图像识别模型",
+  emoji_vlm: "专用表情包识别模型",
+  utils_video: "专用视频分析模型",
+  voice: "语音识别模型",
+  tool_use: "工具调用模型，需要使用支持工具调用的模型",
+  schedule_generator: "日程表生成模型",
+  anti_injection: "反注入检测专用模型",
+  monthly_plan_generator: "月层计划生成模型",
+  relationship_tracker: "用户关系追踪模型",
+  embedding: "嵌入模型",
+  lpmm_entity_extract: "LPMM知识库模型 - 实体提取模型",
+  lpmm_rdf_build: "LPMM知识库模型 - RDF构建模型",
+  lpmm_qa: "LPMM知识库模型 - 问答模型",
+};
+
+const TaskCard = ({ name, task, models, updateTask, openPopovers, setOpenPopovers }: { name: string, task: ModelTask, models: ModelType[], updateTask: Function, openPopovers: Record<string, boolean>, setOpenPopovers: Function }) => (
+  <Card>
+    <Accordion type="single" collapsible>
+      <AccordionItem value={name}>
+        <AccordionTrigger className="px-6">
+          <div>
+            <CardTitle className="text-base text-left">{name}</CardTitle>
+            <CardDescription className="text-left font-normal mt-1">{TASK_DESCRIPTIONS[name] || "模型任务配置"}</CardDescription>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="px-6 pt-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="font-semibold">模型列表</Label>
+              <Popover open={openPopovers[name]} onOpenChange={(isOpen: boolean) => setOpenPopovers((p: any) => ({ ...p, [name]: isOpen }))}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" role="combobox" aria-expanded={openPopovers[name]} className="w-full justify-between h-auto min-h-10">
+                    <div className="flex flex-wrap gap-1">
+                      {task.model_list.length > 0 ? task.model_list.map(modelName => <Badge key={modelName} variant="secondary">{modelName}</Badge>) : "选择模型..."}
+                    </div>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                  <Command>
+                    <CommandInput placeholder="搜索模型..." />
+                    <CommandList>
+                      <CommandEmpty>未找到模型。</CommandEmpty>
+                      <CommandGroup>
+                        {models.map(model => (
+                          <CommandItem key={model.name} value={model.name}
+                            onSelect={() => {
+                              const newList = task.model_list.includes(model.name)
+                                ? task.model_list.filter(m => m !== model.name)
+                                : [...task.model_list, model.name];
+                              updateTask(name, 'model_list', newList);
+                            }}>
+                            <Check className={cn("mr-2 h-4 w-4", task.model_list.includes(model.name) ? "opacity-100" : "opacity-0")} />
+                            {model.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {task.temperature !== undefined && <div className="space-y-2"><Label>温度</Label><Input type="number" step="0.1" value={task.temperature} onChange={(e: ChangeEvent<HTMLInputElement>) => updateTask(name, 'temperature', parseFloat(e.target.value))} /></div>}
+              {task.max_tokens !== undefined && <div className="space-y-2"><Label>Max Tokens</Label><Input type="number" value={task.max_tokens} onChange={(e: ChangeEvent<HTMLInputElement>) => updateTask(name, 'max_tokens', parseInt(e.target.value))} /></div>}
+              {task.concurrency_count !== undefined && <div className="space-y-2"><Label>并发数</Label><Input type="number" value={task.concurrency_count} onChange={(e: ChangeEvent<HTMLInputElement>) => updateTask(name, 'concurrency_count', parseInt(e.target.value))} /></div>}
+              {task.embedding_dimension !== undefined && <div className="space-y-2"><Label>嵌入维度</Label><Input type="number" value={task.embedding_dimension} onChange={(e: ChangeEvent<HTMLInputElement>) => updateTask(name, 'embedding_dimension', parseInt(e.target.value))} /></div>}
+            </div>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  </Card>
+);
+
+
+export function ModelConfig({ tomlContent, onSave, modelTomlPath }: ModelConfigProps) {
+  const [config, setConfig] = useState<ModelConfigType>({ version: "1.3.6", providers: [], models: [], taskConfig: {} });
+  const [openPopovers, setOpenPopovers] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (tomlContent) {
+      try {
+        const parsed = toml.parse(tomlContent);
+        const taskConfig: Record<string, ModelTask> = {};
+        
+        const modelTaskConfigObject = parsed.model_task_config || {};
+
+        TASK_NAMES.forEach(name => {
+          if (modelTaskConfigObject[name]) {
+            taskConfig[name] = modelTaskConfigObject[name];
+          }
+        });
+        
+        // Ensure all task names are present in the config for the UI
+        TASK_NAMES.forEach(name => {
+          if (!taskConfig[name]) {
+             taskConfig[name] = { model_list: [] };
+          }
+        });
+
+        setConfig({
+          version: parsed.version || "1.3.6",
+          providers: parsed.api_providers || [],
+          models: parsed.models || [],
+          taskConfig: taskConfig,
+        });
+      } catch (e) {
+        console.error("Error parsing model config TOML:", e);
+      }
+    } else {
+      const initialTaskConfig: Record<string, ModelTask> = {};
+      TASK_NAMES.forEach(name => {
+        initialTaskConfig[name] = { model_list: [] };
+      });
+      setConfig({ version: "1.pnpm run dev", providers: [], models: [], taskConfig: initialTaskConfig });
     }
-  ]);
+  }, [tomlContent]);
 
-  const [models, setModels] = useState<Model[]>([
-    {
-      model_identifier: "gpt-4o-mini",
-      name: "GPT-4o Mini",
-      api_provider: "OpenAI",
-      price_in: 0.15,
-      price_out: 0.6
-    },
-    {
-      model_identifier: "claude-3-haiku",
-      name: "Claude 3 Haiku",
-      api_provider: "Claude",
-      price_in: 0.25,
-      price_out: 1.25
-    }
-  ]);
+  const handleSave = () => {
+    let output = tomlContent;
 
-  const [taskConfig, setTaskConfig] = useState<Record<string, string>>({
-    reply: "gpt-4o-mini",
-    decision: "gpt-4o-mini",
-    emotion: "claude-3-haiku",
-    mood: "claude-3-haiku",
-    relationship: "gpt-4o-mini",
-    tool: "gpt-4o-mini",
-    schedule: "gpt-4o-mini",
-    anti_injection: "claude-3-haiku",
-    monthly_plan: "gpt-4o-mini",
-    memory: "gpt-4o-mini",
-    embedding: "text-embedding-3-small",
-    image: "gpt-4o-mini",
-    expression: "gpt-4o-mini",
-    video: "gpt-4o-mini",
-    voice: "tts-1",
-    qa: "gpt-4o-mini",
-    entity: "gpt-4o-mini",
-    rdf: "gpt-4o-mini"
-  });
+    const updateSection = (sectionName: string, data: any) => {
+        let sectionStr = `[${sectionName}]\n`;
+        Object.entries(data).forEach(([key, value]) => {
+            if (value === undefined || value === null) return;
+            if (key === 'model_list' && Array.isArray(value)) {
+                sectionStr += `model_list = [${value.map(m => `"${m}"`).join(", ")}]\n`;
+            } else {
+                sectionStr += `${key} = ${value}\n`;
+            }
+        });
+        
+        const regex = new RegExp(`\\[${sectionName.replace('.', '\\.')}\\][\\s\\S]*?(?=\\n\\[|$)`);
+        if (regex.test(output)) {
+            output = output.replace(regex, sectionStr);
+        } else {
+            output += `\n${sectionStr}`;
+        }
+    };
 
-  const [newProvider, setNewProvider] = useState<ApiProvider>({
-    name: "",
-    base_url: "",
-    api_key: "",
-    timeout: 30
-  });
+    Object.entries(config.taskConfig).forEach(([key, task]) => {
+        // Only save if there's something to save
+        if (task.model_list.length > 0 || task.temperature !== undefined || task.max_tokens !== undefined || task.concurrency_count !== undefined || task.embedding_dimension !== undefined) {
+           updateSection(`model_task_config.${key}`, task);
+        }
+    });
 
-  const [newModel, setNewModel] = useState<Model>({
-    model_identifier: "",
-    name: "",
-    api_provider: "",
-    price_in: 0,
-    price_out: 0
-  });
-
-  const [showAddProvider, setShowAddProvider] = useState(false);
-  const [showAddModel, setShowAddModel] = useState(false);
-
-  const addProvider = () => {
-    if (newProvider.name && newProvider.base_url && newProvider.api_key) {
-      setProviders([...providers, { ...newProvider }]);
-      setNewProvider({ name: "", base_url: "", api_key: "", timeout: 30 });
-      setShowAddProvider(false);
-    }
+    onSave(output);
   };
 
-  const removeProvider = (name: string) => {
-    setProviders(providers.filter(p => p.name !== name));
-    // 也要移除使用此提供商的模型
-    setModels(models.filter(m => m.api_provider !== name));
+  const updateProvider = (index: number, field: keyof ApiProvider, value: any) => {
+    const newProviders = [...config.providers];
+    (newProviders[index] as any)[field] = value;
+    setConfig(c => ({ ...c, providers: newProviders }));
+  };
+  
+  const updateModel = (index: number, field: keyof ModelType, value: any) => {
+    const newModels = [...config.models];
+    (newModels[index] as any)[field] = value;
+    setConfig(c => ({ ...c, models: newModels }));
   };
 
-  const addModel = () => {
-    if (newModel.model_identifier && newModel.name && newModel.api_provider) {
-      setModels([...models, { ...newModel }]);
-      setNewModel({ model_identifier: "", name: "", api_provider: "", price_in: 0, price_out: 0 });
-      setShowAddModel(false);
-    }
+  const updateTask = (name: string, field: keyof ModelTask, value: any) => {
+    setConfig(c => ({
+      ...c,
+      taskConfig: {
+        ...c.taskConfig,
+        [name]: {
+          ...c.taskConfig[name],
+          [field]: value
+        }
+      }
+    }));
   };
-
-  const removeModel = (identifier: string) => {
-    setModels(models.filter(m => m.model_identifier !== identifier));
-  };
-
-  const updateTaskConfig = (task: string, modelId: string) => {
-    setTaskConfig(prev => ({ ...prev, [task]: modelId }));
-  };
+  
+  const addProvider = () => setConfig(c => ({ ...c, providers: [...c.providers, { ...defaultProvider }] }));
+  const removeProvider = (index: number) => setConfig(c => ({ ...c, providers: c.providers.filter((_, i) => i !== index) }));
+  
+  const addModel = () => setConfig(c => ({ ...c, models: [...c.models, { ...defaultModel }] }));
+  const removeModel = (index: number) => setConfig(c => ({ ...c, models: c.models.filter((_, i) => i !== index) }));
 
   return (
     <div className="space-y-6">
-      {/* API 服务提供商 */}
+      <p className="text-sm text-muted-foreground">{modelTomlPath}</p>
+      
+      {/* API Providers */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Server className="h-4 w-4" />
-            API 服务提供商
-          </CardTitle>
-          <CardDescription>配置 AI 模型的 API 服务商</CardDescription>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-base">API 服务提供商</CardTitle>
+            <Button size="sm" onClick={addProvider}><Plus className="h-4 w-4 mr-2" />添加</Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-3">
-            {providers.map((provider) => (
-              <div key={provider.name} className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{provider.name}</Badge>
-                    <Badge variant="secondary" className="text-xs">
-                      超时: {provider.timeout}s
-                    </Badge>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hover:bg-destructive hover:text-destructive-foreground"
-                    onClick={() => removeProvider(provider.name)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+          {config.providers.map((p, i) => (
+            <div key={i} className="p-4 border rounded-md space-y-4 relative">
+              <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={() => removeProvider(i)}><Trash2 className="h-4 w-4" /></Button>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor={`provider-name-${i}`}>名称</Label>
+                  <Input id={`provider-name-${i}`} placeholder="服务商名称 (例如, DeepSeek)" value={p.name} onChange={e => updateProvider(i, 'name', e.target.value)} />
                 </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Base URL:</span>
-                    <p className="font-mono break-all">{provider.base_url}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">API Key:</span>
-                    <p className="font-mono">••••••••••••{provider.api_key.slice(-6)}</p>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`provider-base-url-${i}`}>Base URL</Label>
+                  <Input id={`provider-base-url-${i}`} placeholder="API Base URL (例如, https://api.deepseek.com/v1)" value={p.base_url} onChange={e => updateProvider(i, 'base_url', e.target.value)} />
                 </div>
               </div>
-            ))}
-          </div>
-
-          {showAddProvider ? (
-            <Card className="border-dashed">
-              <CardContent className="pt-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor={`provider-api-key-${i}`}>API 密钥 (每行一个)</Label>
+                <Textarea id={`provider-api-key-${i}`} placeholder="your-api-key-1&#10;your-api-key-2" value={Array.isArray(p.api_key) ? p.api_key.join('\n') : p.api_key} onChange={e => updateProvider(i, 'api_key', e.target.value.split('\n'))} />
+              </div>
+               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                   <div className="space-y-2">
-                    <Label>提供商名称</Label>
-                    <Input
-                      value={newProvider.name}
-                      onChange={(e) => setNewProvider(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="例如: OpenAI"
-                    />
+                    <Label htmlFor={`provider-client-type-${i}`}>客户端类型</Label>
+                    <Select value={p.client_type} onValueChange={(v: string) => updateProvider(i, 'client_type', v)}>
+                      <SelectTrigger><SelectValue placeholder="客户端类型" /></SelectTrigger>
+                      <SelectContent><SelectItem value="openai">openai</SelectItem><SelectItem value="aiohttp_gemini">aiohttp_gemini</SelectItem></SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>超时时间 (秒)</Label>
-                    <Input
-                      type="number"
-                      value={newProvider.timeout}
-                      onChange={(e) => setNewProvider(prev => ({ ...prev, timeout: parseInt(e.target.value) || 30 }))}
-                      placeholder="30"
-                    />
+                    <Label htmlFor={`provider-max-retry-${i}`}>最大重试</Label>
+                    <Input id={`provider-max-retry-${i}`} type="number" value={p.max_retry} onChange={(e: ChangeEvent<HTMLInputElement>) => updateProvider(i, 'max_retry', parseInt(e.target.value))} />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Base URL</Label>
-                  <Input
-                    value={newProvider.base_url}
-                    onChange={(e) => setNewProvider(prev => ({ ...prev, base_url: e.target.value }))}
-                    placeholder="https://api.openai.com/v1"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>API Key</Label>
-                  <Input
-                    type="password"
-                    value={newProvider.api_key}
-                    onChange={(e) => setNewProvider(prev => ({ ...prev, api_key: e.target.value }))}
-                    placeholder="sk-xxxxxxxxxxxxxxxx"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button onClick={addProvider}>添加</Button>
-                  <Button variant="outline" onClick={() => setShowAddProvider(false)}>取消</Button>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Button 
-              variant="outline" 
-              onClick={() => setShowAddProvider(true)}
-              className="w-full border-dashed"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              添加新的服务提供商
-            </Button>
-          )}
+                  <div className="space-y-2">
+                    <Label htmlFor={`provider-timeout-${i}`}>超时(秒)</Label>
+                    <Input id={`provider-timeout-${i}`} type="number" value={p.timeout} onChange={(e: ChangeEvent<HTMLInputElement>) => updateProvider(i, 'timeout', parseInt(e.target.value))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`provider-retry-interval-${i}`}>重试间隔(秒)</Label>
+                    <Input id={`provider-retry-interval-${i}`} type="number" value={p.retry_interval} onChange={(e: ChangeEvent<HTMLInputElement>) => updateProvider(i, 'retry_interval', parseInt(e.target.value))} />
+                  </div>
+              </div>
+              <Separator />
+              <div className="flex items-center gap-4">
+                  <Switch id={`obfuscation-${i}`} checked={p.enable_content_obfuscation} onCheckedChange={(c: boolean) => updateProvider(i, 'enable_content_obfuscation', c)} />
+                  <Label htmlFor={`obfuscation-${i}`} className="flex-grow">启用内容混淆</Label>
+                  {p.enable_content_obfuscation && (
+                    <>
+                      <Slider value={[p.obfuscation_intensity || 1]} onValueChange={(v: number[]) => updateProvider(i, 'obfuscation_intensity', v[0])} min={1} max={3} step={1} className="w-32" />
+                      <span className="text-sm w-8 text-center">{p.obfuscation_intensity}</span>
+                    </>
+                  )}
+              </div>
+            </div>
+          ))}
         </CardContent>
       </Card>
-
-      {/* 模型配置 */}
+      
+      {/* Models */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Brain className="h-4 w-4" />
-            模型配置
-          </CardTitle>
-          <CardDescription>配置可用的 AI 模型</CardDescription>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-base">模型</CardTitle>
+            <Button size="sm" onClick={addModel}><Plus className="h-4 w-4 mr-2" />添加</Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-3">
-            {models.map((model) => (
-              <div key={model.model_identifier} className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-sm">{model.name}</h4>
-                    <Badge variant="outline" className="text-xs">
-                      {model.api_provider}
-                    </Badge>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hover:bg-destructive hover:text-destructive-foreground"
-                    onClick={() => removeModel(model.model_identifier)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">标识符:</span>
-                    <p className="font-mono">{model.model_identifier}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">输入价格:</span>
-                    <p>${model.price_in}/1k tokens</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">输出价格:</span>
-                    <p>${model.price_out}/1k tokens</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {showAddModel ? (
-            <Card className="border-dashed">
-              <CardContent className="pt-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>模型标识符</Label>
-                    <Input
-                      value={newModel.model_identifier}
-                      onChange={(e) => setNewModel(prev => ({ ...prev, model_identifier: e.target.value }))}
-                      placeholder="gpt-4o-mini"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>模型名称</Label>
-                    <Input
-                      value={newModel.name}
-                      onChange={(e) => setNewModel(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="GPT-4o Mini"
-                    />
-                  </div>
+          {config.models.map((m, i) => (
+            <div key={i} className="p-4 border rounded-md space-y-4 relative">
+              <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={() => removeModel(i)}><Trash2 className="h-4 w-4" /></Button>
+              <div className="grid md:grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                  <Label htmlFor={`model-identifier-${i}`}>模型标识符</Label>
+                  <Input id={`model-identifier-${i}`} placeholder="模型标识符 (例如, deepseek-chat)" value={m.model_identifier} onChange={e => updateModel(i, 'model_identifier', e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>API 提供商</Label>
-                  <Select 
-                    value={newModel.api_provider} 
-                    onValueChange={(value) => setNewModel(prev => ({ ...prev, api_provider: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="选择提供商" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {providers.map(provider => (
-                        <SelectItem key={provider.name} value={provider.name}>
-                          {provider.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                   <Label htmlFor={`model-name-${i}`}>自定义模型名称</Label>
+                  <Input id={`model-name-${i}`} placeholder="自定义模型名称 (例如, deepseek-v3)" value={m.name} onChange={e => updateModel(i, 'name', e.target.value)} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>输入价格 ($/1k tokens)</Label>
-                    <Input
-                      type="number"
-                      step="0.001"
-                      value={newModel.price_in}
-                      onChange={(e) => setNewModel(prev => ({ ...prev, price_in: parseFloat(e.target.value) || 0 }))}
-                      placeholder="0.15"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>输出价格 ($/1k tokens)</Label>
-                    <Input
-                      type="number"
-                      step="0.001"
-                      value={newModel.price_out}
-                      onChange={(e) => setNewModel(prev => ({ ...prev, price_out: parseFloat(e.target.value) || 0 }))}
-                      placeholder="0.6"
-                    />
-                  </div>
+              </div>
+              <Select value={m.api_provider} onValueChange={(v: string) => updateModel(i, 'api_provider', v)}>
+                <SelectTrigger><SelectValue placeholder="选择 API 提供商" /></SelectTrigger>
+                <SelectContent>{config.providers.map(p => <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>)}</SelectContent>
+              </Select>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor={`model-price-in-${i}`}>输入价格 (元/M tokens)</Label>
+                  <Input id={`model-price-in-${i}`} type="number" value={m.price_in} onChange={(e: ChangeEvent<HTMLInputElement>) => updateModel(i, 'price_in', parseFloat(e.target.value))} />
                 </div>
-                <div className="flex gap-2">
-                  <Button onClick={addModel}>添加</Button>
-                  <Button variant="outline" onClick={() => setShowAddModel(false)}>取消</Button>
+                <div className="space-y-2">
+                  <Label htmlFor={`model-price-out-${i}`}>输出价格 (元/M tokens)</Label>
+                  <Input id={`model-price-out-${i}`} type="number" value={m.price_out} onChange={(e: ChangeEvent<HTMLInputElement>) => updateModel(i, 'price_out', parseFloat(e.target.value))} />
                 </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Button 
-              variant="outline" 
-              onClick={() => setShowAddModel(true)}
-              className="w-full border-dashed"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              添加新模型
-            </Button>
-          )}
+              </div>
+              <div className="flex items-center justify-around">
+                <div className="flex items-center gap-2"><Switch id={`model-force-stream-${i}`} checked={m.force_stream_mode} onCheckedChange={(c: boolean) => updateModel(i, 'force_stream_mode', c)} /><Label htmlFor={`model-force-stream-${i}`}>强制流式</Label></div>
+                <div className="flex items-center gap-2"><Switch id={`model-anti-truncation-${i}`} checked={m.use_anti_truncation} onCheckedChange={(c: boolean) => updateModel(i, 'use_anti_truncation', c)} /><Label htmlFor={`model-anti-truncation-${i}`}>反截断</Label></div>
+                <div className="flex items-center gap-2"><Switch id={`model-enable-thinking-${i}`} checked={m.extra_params?.enable_thinking} onCheckedChange={(c: boolean) => setConfig(conf => { const newConf = {...conf}; newConf.models[i].extra_params = {...newConf.models[i].extra_params, enable_thinking: c }; return newConf;})} /><Label htmlFor={`model-enable-thinking-${i}`}>启用思考</Label></div>
+              </div>
+            </div>
+          ))}
         </CardContent>
       </Card>
-
-      {/* 任务模型配置 */}
+      
+      {/* Task Config */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Zap className="h-4 w-4" />
-            任务模型配置
-          </CardTitle>
-          <CardDescription>为不同任务分配合适的模型</CardDescription>
+            <CardTitle className="text-base">模型任务配置</CardTitle>
+            <CardDescription>为不同任务（如回复、决策、视觉识别等）分配和配置特定的模型。</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {taskTypes.map((task) => (
-              <div key={task.key} className="space-y-2">
-                <div>
-                  <Label htmlFor={`task-${task.key}`}>{task.name}</Label>
-                  <p className="text-xs text-muted-foreground">{task.description}</p>
-                </div>
-                <Select 
-                  value={taskConfig[task.key] || ""} 
-                  onValueChange={(value) => updateTaskConfig(task.key, value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择模型" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {models.map(model => (
-                      <SelectItem key={model.model_identifier} value={model.model_identifier}>
-                        <div className="flex items-center gap-2">
-                          <span>{model.name}</span>
-                          <Badge variant="outline" className="text-xs">
-                            {model.api_provider}
-                          </Badge>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ))}
-          </div>
+        <CardContent className="space-y-4">
+           {TASK_NAMES.map(name => (
+             config.taskConfig[name] && <TaskCard key={name} name={name} task={config.taskConfig[name]} models={config.models} updateTask={updateTask} openPopovers={openPopovers} setOpenPopovers={setOpenPopovers} />
+           ))}
         </CardContent>
       </Card>
+      
+      <div className="flex justify-end pt-4">
+        <Button onClick={handleSave}><Save className="mr-2 h-4 w-4" />保存模型配置</Button>
+      </div>
     </div>
   );
 }

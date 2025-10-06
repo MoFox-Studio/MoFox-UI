@@ -190,6 +190,7 @@
 
   html, :host {
     -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
     tab-size: 4;
     line-height: 1.5;
     font-family: var(--default-font-family, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji");
@@ -4168,4 +4169,38 @@ html {
     opacity: var(--tw-exit-opacity, 1);
     transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0) scale3d(var(--tw-exit-scale, 1), var(--tw-exit-scale, 1), var(--tw-exit-scale, 1)) rotate(var(--tw-exit-rotate, 0));
   }
+}
+
+.blur-sm {
+  filter: blur(4px);
+}
+.blur-0 {
+  filter: blur(0);
+}
+.opacity-50 {
+  opacity: 0.5;
+}
+.opacity-100 {
+  opacity: 1;
+}
+.duration-300 {
+  transition-duration: 300ms;
+}
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reduced-motion *, .reduced-motion *:before, .reduced-motion *:after {
+  animation-duration: 0s !important;
+  transition-duration: 0s !important;
+}
+
+.no-shadows *, .no-shadows *:before, .no-shadows *:after {
+  box-shadow: none !important;
+}
+
+.no-blur *, .no-blur *:before, .no-blur *:after {
+  filter: none !important;
+  backdrop-filter: none !important;
 }

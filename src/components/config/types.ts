@@ -54,22 +54,41 @@ export interface SecurityConfigType {
 export interface ApiProvider {
   name: string;
   base_url: string;
-  api_key: string;
-  timeout: number;
+  api_key: string | string[];
+  client_type?: string;
+  max_retry?: number;
+  timeout?: number;
+  retry_interval?: number;
+  enable_content_obfuscation?: boolean;
+  obfuscation_intensity?: number;
 }
 
 export interface Model {
   model_identifier: string;
   name: string;
   api_provider: string;
-  price_in: number;
-  price_out: number;
+  price_in?: number;
+  price_out?: number;
+  force_stream_mode?: boolean;
+  use_anti_truncation?: boolean;
+  extra_params?: {
+    enable_thinking?: boolean;
+  };
+}
+
+export interface ModelTask {
+  model_list: string[];
+  temperature?: number;
+  max_tokens?: number;
+  concurrency_count?: number;
+  embedding_dimension?: number;
 }
 
 export interface ModelConfigType {
+  version?: string;
   providers: ApiProvider[];
   models: Model[];
-  taskConfig: Record<string, string>;
+  taskConfig: Record<string, ModelTask>;
 }
 
 export interface FeatureConfigType {

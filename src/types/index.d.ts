@@ -25,4 +25,13 @@ interface FileSystemWritableFileStream extends WritableStream {
 
 interface Window {
   showDirectoryPicker(): Promise<FileSystemDirectoryHandle>;
+  showOpenFilePicker(): Promise<FileSystemFileHandle[]>;
+  // Define the Electron API that will be exposed via the preload script
+  electron?: {
+    showOpenDialog: (options: {
+      title?: string;
+      buttonLabel?: string;
+      properties?: ('openFile' | 'openDirectory' | 'multiSelections' | 'showHiddenFiles' | 'createDirectory')[];
+    }) => Promise<string | null>;
+  };
 }

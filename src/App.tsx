@@ -10,33 +10,64 @@ import { ChatStatistics } from "./components/ChatStatistics";
 import { UserProfile } from "./components/UserProfile";
 import { UserManagement } from "./components/UserManagement";
 import { LoginPage } from "./components/LoginPage";
+import { FileSelector } from "./components/FileSelector";
 import { Toaster } from "./components/ui/sonner";
-import { useAuth } from "./hooks/useAuth";
-import { useTheme } from "./hooks/useTheme";
+import { toast } from "sonner";
+import { del } from 'idb-keyval';
+import { useAuth } from "./contexts/AuthContext";
+import { useTheme } from "./contexts/ThemeContext";
 
 export default function App() {
   const [activeSection, setActiveSection] = useState("dashboard");
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const { isAuthenticated, user, isLoading, login, logout } = useAuth();
-  const { isLoaded: themeLoaded } = useTheme();
+  const { config: themeConfig, isLoaded: themeLoaded } = useTheme();
+  const [directoryHandle, setDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
+
+  const handleSectionChange = (section: string) => {
+    if (section !== activeSection) {
+      if (themeConfig.effects.animations) {
+        setIsTransitioning(true);
+        setTimeout(() => {
+          setActiveSection(section);
+          setIsTransitioning(false);
+        }, 150); // 延迟应与CSS过渡时间匹配
+      } else {
+        setActiveSection(section);
+      }
+    }
+  };
 
   // 退出登录时重置activeSection
-  const handleLogout = () => {
-    setActiveSection("dashboard");
+  const handleLogout = (showToast = true) => {
+    handleSectionChange("dashboard");
+    setDirectoryHandle(null);
+    del('directoryHandle'); // Clear handle from IndexedDB
+    if (showToast) {
+      toast.info("已退出，请重新登录并选择目录。");
+    }
     logout();
+  };
+
+  const handleFileSelect = (handle: FileSystemDirectoryHandle) => {
+    setDirectoryHandle(handle);
+    toast.success("已自动加载上次选择的目录", {
+      description: handle.name,
+    });
   };
 
   const renderContent = () => {
     switch (activeSection) {
       case "dashboard":
-        return <Dashboard onNavigateToLogs={() => setActiveSection("logs")} />;
+        return <Dashboard onNavigateToLogs={() => handleSectionChange("logs")} />;
       case "config":
-        return <ConfigurationManager />;
+        return <ConfigurationManager directoryHandle={directoryHandle} onPermissionError={() => handleLogout(false)} />;
       case "logs":
         return <LogViewer />;
       case "statistics":
         return <ChatStatistics />;
       case "profile":
-        return user ? <UserProfile user={user} onBack={() => setActiveSection("dashboard")} /> : (
+        return user ? <UserProfile user={user} onBack={() => handleSectionChange("dashboard")} /> : (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <p className="text-muted-foreground">用户数据不可用</p>
@@ -48,7 +79,7 @@ export default function App() {
       case "theme":
         return <ThemeManager />;
       default:
-        return <Dashboard onNavigateToLogs={() => setActiveSection("logs")} />;
+        return <Dashboard onNavigateToLogs={() => handleSectionChange("logs")} />;
     }
   };
 
@@ -111,18 +142,23 @@ export default function App() {
     return <LoginPage onLogin={login} />;
   }
 
+  // 如果已登录但未选择目录，则显示文件选择器
+  if (!directoryHandle) {
+    return <FileSelector onFileSelect={handleFileSelect} onLogout={handleLogout} />;
+  }
+
   // 登录后显示主界面
   return (
     <TooltipProvider>
       <SidebarProvider>
         <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar 
-            activeSection={activeSection} 
-            onSectionChange={setActiveSection}
+          <AppSidebar
+            activeSection={activeSection}
+            onSectionChange={handleSectionChange}
             user={user || undefined}
             onLogout={handleLogout}
           />
-          <main className="flex-1 flex flex-col">
+          <main className={`flex-1 flex flex-col transition-all duration-300 ${isTransitioning ? 'blur-sm opacity-50' : 'blur-0 opacity-100'}`}>
             <header className="border-b bg-card px-6 py-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>

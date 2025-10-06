@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import * as toml from 'toml';
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -6,33 +7,124 @@ import { Switch } from "../ui/switch";
 import { Slider } from "../ui/slider";
 import { Separator } from "../ui/separator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { toast } from "sonner";
+import { Plus, X } from "lucide-react";
+import { Badge } from "../ui/badge";
 
-export function PersonalityConfig() {
-  const [config, setConfig] = useState({
-    // 人格配置
-    personality_core: "积极向上的女大学生",
-    personality_side: "活泼、好奇、善良",
-    identity: "20岁的计算机专业女大学生，身高165cm，喜欢编程和游戏",
-    background_story: "是一个热爱技术的大学生，平时喜欢研究新技术，也喜欢和朋友们一起玩游戏。性格开朗活泼，总是充满好奇心。",
-    
-    // 表达风格
-    reply_style: "友好、自然、略带俏皮",
-    
-    // 表达学习规则
-    chat_stream_id: "default_stream",
-    use_expression: true,
-    learn_expression: true,
-    learning_strength: 0.7,
-    
-    // 表情包管理
-    emoji_chance: 0.3,
-    max_reg_num: 100,
-    steal_emoji: false,
-    emoji_selection_mode: "emotion",
-  });
+interface PersonalityConfigProps {
+  tomlContent: string;
+  onSave: (newTomlContent: string) => void;
+  botTomlPath: string;
+}
+
+const initialPersonalityConfig = {
+  personality_core: "",
+  personality_side: "",
+  identity: "",
+  background_story: "",
+  reply_style: "",
+  safety_guidelines: [] as string[],
+  use_expression: true,
+  learn_expression: true,
+  learning_strength: 1.0,
+  emoji_chance: 0.6,
+  max_reg_num: 10000,
+  steal_emoji: true,
+  emoji_selection_mode: "emotion",
+};
+
+export function PersonalityConfig({ tomlContent, onSave }: PersonalityConfigProps) {
+  const [config, setConfig] = useState(initialPersonalityConfig);
+  const [newGuideline, setNewGuideline] = useState("");
+
+  useEffect(() => {
+    if (tomlContent) {
+      try {
+        const parsedToml = toml.parse(tomlContent);
+        const personality = parsedToml.personality || {};
+        const emoji = parsedToml.emoji || {};
+        
+        setConfig({
+          ...initialPersonalityConfig,
+          ...personality,
+          ...emoji,
+          safety_guidelines: personality.safety_guidelines || [],
+        });
+      } catch (e: any) {
+        console.error("KILO-CODE-DEBUG: Error parsing TOML in PersonalityConfig.tsx. Full error object:", e);
+        const match = e.message.match(/at line (\d+) column (\d+)/);
+        const description = match
+          ? `语法错误: ${e.message.split(' at line')[0]} (行: ${match[1]}, 列: ${match[2]})`
+          : `语法错误: ${e.message}`;
+        toast.error("解析 PersonalityConfig 失败", { description, duration: 10000 });
+      }
+    }
+  }, [tomlContent]);
 
   const updateConfig = (key: string, value: any) => {
     setConfig(prev => ({ ...prev, [key]: value }));
+  };
+  
+  const addGuideline = () => {
+    if (newGuideline.trim() && !config.safety_guidelines.includes(newGuideline.trim())) {
+      updateConfig("safety_guidelines", [...config.safety_guidelines, newGuideline.trim()]);
+      setNewGuideline("");
+    }
+  };
+
+  const removeGuideline = (guideline: string) => {
+    updateConfig("safety_guidelines", config.safety_guidelines.filter(g => g !== guideline));
+  };
+
+  const handleSave = () => {
+    let updatedToml = tomlContent;
+
+    const updateStringValue = (section: string, key: string, value: string) => {
+        const isMultiLine = value.includes('\n');
+        const formattedValue = isMultiLine
+            ? `"""\n${value.replace(/"""/g, `\\"""`)}\n"""`
+            : `"${value.replace(/"/g, '\\"')}"`;
+
+        const singleLineRegex = new RegExp(`(\\[${section}\\](?:[^\\[]|\\[(?!\\[))*?${key}\\s*=\\s*)"(?:[^"\\\\]|\\\\.)*"`);
+        const multiLineRegex = new RegExp(`(\\[${section}\\](?:[^\\[]|\\[(?!\\[))*?${key}\\s*=\\s*)"""(?:[^]*?)"""`);
+        
+        if (multiLineRegex.test(updatedToml)) {
+             updatedToml = updatedToml.replace(multiLineRegex, `$1${formattedValue}`);
+        } else if (singleLineRegex.test(updatedToml)) {
+            updatedToml = updatedToml.replace(singleLineRegex, `$1${formattedValue}`);
+        }
+    };
+    
+    const updateNonStringValue = (section: string, key: string, value: any) => {
+        const regex = new RegExp(`(\\[${section}\\](?:[^\\[]|\\[(?!\\[))*?${key}\\s*=\\s*)[^\\n#]*`);
+        updatedToml = updatedToml.replace(regex, `$1${value}`);
+    };
+    
+    const updateArrayValue = (section: string, key: string, value: string[]) => {
+        const formattedValue = `[${value.map(v => `"${v.replace(/"/g, '\\"')}"`).join(", ")}]`;
+        const regex = new RegExp(`(\\[${section}\\](?:[^\\[]|\\[(?!\\[))*?${key}\\s*=\\s*)\\[[\\s\\S]*?\\]`);
+        
+        if (regex.test(updatedToml)) {
+            updatedToml = updatedToml.replace(regex, `$1${formattedValue}`);
+        }
+    };
+    
+    // Update personality section
+    updateStringValue('personality', 'personality_core', config.personality_core);
+    updateStringValue('personality', 'personality_side', config.personality_side);
+    updateStringValue('personality', 'identity', config.identity);
+    updateStringValue('personality', 'background_story', config.background_story);
+    updateStringValue('personality', 'reply_style', config.reply_style);
+    updateArrayValue('personality', 'safety_guidelines', config.safety_guidelines);
+    
+    // Update emoji section
+    updateNonStringValue('emoji', 'emoji_chance', config.emoji_chance);
+    updateNonStringValue('emoji', 'max_reg_num', config.max_reg_num);
+    updateNonStringValue('emoji', 'steal_emoji', config.steal_emoji);
+    updateStringValue('emoji', 'emoji_selection_mode', config.emoji_selection_mode);
+
+    onSave(updatedToml);
   };
 
   return (
@@ -115,47 +207,77 @@ export function PersonalityConfig() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* 安全与互动底线 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">安全与互动底线</CardTitle>
+          <CardDescription>Bot在任何情况下都必须遵守的原则</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+            <Label htmlFor="new-guideline-input">安全守则</Label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {config.safety_guidelines.map((guideline) => (
+                <Badge key={guideline} variant="secondary" className="flex items-center gap-1">
+                  {guideline}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto p-0.5 hover:bg-destructive hover:text-destructive-foreground"
+                    onClick={() => removeGuideline(guideline)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </Badge>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Input
+                id="new-guideline-input"
+                value={newGuideline}
+                onChange={(e) => setNewGuideline(e.target.value)}
+                placeholder="添加新守则"
+                onKeyPress={(e) => e.key === 'Enter' && addGuideline()}
+              />
+              <Button onClick={addGuideline} size="sm">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+        </CardContent>
+      </Card>
 
       {/* 表达学习 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">表达学习</CardTitle>
-          <CardDescription>配置机器人的表达学习机制</CardDescription>
+          <CardTitle className="text-base">全局表达学习规则</CardTitle>
+          <CardDescription>配置默认的表达学习机制 (<code>chat_stream_id = ""</code>)</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="chat-stream-id">聊天流 ID</Label>
-            <Input
-              id="chat-stream-id"
-              value={config.chat_stream_id}
-              onChange={(e) => updateConfig("chat_stream_id", e.target.value)}
-              placeholder="default_stream"
-            />
-          </div>
-
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>使用学到的表达</Label>
+              <Label htmlFor="use-expression">使用学到的表达</Label>
               <p className="text-sm text-muted-foreground">
                 是否使用已学习的表达方式
               </p>
             </div>
             <Switch
+              id="use-expression"
               checked={config.use_expression}
-              onCheckedChange={(checked) => updateConfig("use_expression", checked)}
+              onCheckedChange={(checked: boolean) => updateConfig("use_expression", checked)}
             />
           </div>
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>学习新表达</Label>
+              <Label htmlFor="learn-expression">学习新表达</Label>
               <p className="text-sm text-muted-foreground">
                 是否从对话中学习新的表达方式
               </p>
             </div>
             <Switch
+              id="learn-expression"
               checked={config.learn_expression}
-              onCheckedChange={(checked) => updateConfig("learn_expression", checked)}
+              onCheckedChange={(checked: boolean) => updateConfig("learn_expression", checked)}
             />
           </div>
 
@@ -171,7 +293,7 @@ export function PersonalityConfig() {
                 </div>
                 <Slider
                   value={[config.learning_strength]}
-                  onValueChange={(value) => updateConfig("learning_strength", value[0])}
+                  onValueChange={(value: number[]) => updateConfig("learning_strength", value[0])}
                   min={0}
                   max={1}
                   step={0.1}
@@ -204,7 +326,7 @@ export function PersonalityConfig() {
             </div>
             <Slider
               value={[config.emoji_chance]}
-              onValueChange={(value) => updateConfig("emoji_chance", value[0])}
+              onValueChange={(value: number[]) => updateConfig("emoji_chance", value[0])}
               min={0}
               max={1}
               step={0.1}
@@ -232,14 +354,15 @@ export function PersonalityConfig() {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>偷取表情包</Label>
+              <Label htmlFor="steal-emoji">偷取表情包</Label>
               <p className="text-sm text-muted-foreground">
                 是否可以学习和使用用户发送的表情包
               </p>
             </div>
             <Switch
+              id="steal-emoji"
               checked={config.steal_emoji}
-              onCheckedChange={(checked) => updateConfig("steal_emoji", checked)}
+              onCheckedChange={(checked: boolean) => updateConfig("steal_emoji", checked)}
             />
           </div>
 
@@ -253,7 +376,6 @@ export function PersonalityConfig() {
             >
               <option value="emotion">基于情绪</option>
               <option value="description">基于描述</option>
-              <option value="random">随机选择</option>
             </select>
             <p className="text-sm text-muted-foreground">
               选择表情包的匹配策略

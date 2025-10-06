@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useTheme } from "../hooks/useTheme";
+import { useTheme } from "../contexts/ThemeContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Label } from "./ui/label";
@@ -9,7 +9,7 @@ import { Slider } from "./ui/slider";
 import { Switch } from "./ui/switch";
 import { Badge } from "./ui/badge";
 import { Palette, Sun, Moon, Monitor, Eye, Sparkles } from "lucide-react";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 
 interface ThemeConfig {
   mode: "light" | "dark" | "auto";
@@ -198,7 +198,7 @@ export function ThemeManager() {
               </div>
               <Switch
                 checked={config.effects.animations}
-                onCheckedChange={(checked) => handleUpdateNestedConfig("effects", "animations", checked)}
+                onCheckedChange={(checked: boolean) => handleUpdateNestedConfig("effects", "animations", checked)}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -208,7 +208,7 @@ export function ThemeManager() {
               </div>
               <Switch
                 checked={config.effects.shadows}
-                onCheckedChange={(checked) => handleUpdateNestedConfig("effects", "shadows", checked)}
+                onCheckedChange={(checked: boolean) => handleUpdateNestedConfig("effects", "shadows", checked)}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -218,7 +218,7 @@ export function ThemeManager() {
               </div>
               <Switch
                 checked={config.effects.blur}
-                onCheckedChange={(checked) => handleUpdateNestedConfig("effects", "blur", checked)}
+                onCheckedChange={(checked: boolean) => handleUpdateNestedConfig("effects", "blur", checked)}
               />
             </div>
           </CardContent>
@@ -383,7 +383,7 @@ export function ThemeManager() {
             </div>
             <Switch
               checked={config.accessibility.highContrast}
-              onCheckedChange={(checked) => handleUpdateNestedConfig("accessibility", "highContrast", checked)}
+              onCheckedChange={(checked: boolean) => handleUpdateNestedConfig("accessibility", "highContrast", checked)}
             />
           </div>
           
@@ -394,7 +394,7 @@ export function ThemeManager() {
             </div>
             <Switch
               checked={config.accessibility.reducedMotion}
-              onCheckedChange={(checked) => handleUpdateNestedConfig("accessibility", "reducedMotion", checked)}
+              onCheckedChange={(checked: boolean) => handleUpdateNestedConfig("accessibility", "reducedMotion", checked)}
             />
           </div>
 
@@ -407,7 +407,7 @@ export function ThemeManager() {
             </div>
             <Slider
               value={[config.accessibility.fontSize]}
-              onValueChange={(value) => handleUpdateNestedConfig("accessibility", "fontSize", value[0])}
+              onValueChange={(value: number[]) => handleUpdateNestedConfig("accessibility", "fontSize", value[0])}
               min={12}
               max={24}
               step={1}

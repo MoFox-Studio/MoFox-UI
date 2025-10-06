@@ -32,7 +32,7 @@ import {
   AlertDialogTitle,
 } from "./ui/alert-dialog";
 import { useState } from "react";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 
 interface AppSidebarProps {
   activeSection: string;
@@ -144,7 +144,7 @@ export function AppSidebar({ activeSection, onSectionChange, user, onLogout }: A
 
       {user && (
         <SidebarFooter className="border-t p-4">
-          <DropdownMenu modal={false}>
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-start gap-3 h-auto py-3">
                 <Avatar className="h-8 w-8">
@@ -162,7 +162,7 @@ export function AppSidebar({ activeSection, onSectionChange, user, onLogout }: A
               <DropdownMenuLabel>我的账户</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
-                onClick={(e) => {
+                onClick={(e: React.MouseEvent) => {
                   e.preventDefault();
                   handleProfileClick();
                 }}

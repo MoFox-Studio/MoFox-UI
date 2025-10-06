@@ -6,7 +6,7 @@ import { Label } from "./ui/label";
 import { Checkbox } from "./ui/checkbox";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Bot, Lock, User, Eye, EyeOff } from "lucide-react";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 
 interface LoginPageProps {
   onLogin: (credentials: { username: string; password: string; rememberMe: boolean }) => void;
@@ -129,7 +129,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 <Checkbox
                   id="remember"
                   checked={credentials.rememberMe}
-                  onCheckedChange={(checked) => updateCredentials("rememberMe", checked)}
+                  onCheckedChange={(checked: boolean) => updateCredentials("rememberMe", checked)}
                   disabled={isLoading}
                 />
                 <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">

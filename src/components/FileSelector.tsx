@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { get, set } from 'idb-keyval';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -13,11 +14,23 @@ interface FileSelectorProps {
 export function FileSelector({ onFileSelect, onLogout }: FileSelectorProps) {
   const [selectedDirectoryHandle, setSelectedDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
 
+  // Load handle from IndexedDB on component mount
+  useEffect(() => {
+    get('directoryHandle').then(handle => {
+      if (handle) {
+        // Immediately pass the handle to the parent, effectively skipping this component
+        onFileSelect(handle);
+        // Toast notification is now handled by the parent component (App.tsx)
+      }
+    });
+  }, [onFileSelect]);
+
   const handleDirectoryBrowse = async () => {
     if ('showDirectoryPicker' in window) {
       try {
         const directoryHandle = await window.showDirectoryPicker();
-        setSelectedDirectoryHandle(directoryHandle); // Store the handle, but don't proceed yet
+        setSelectedDirectoryHandle(directoryHandle);
+        set('directoryHandle', directoryHandle); // Save handle to IndexedDB
         toast.success("已选择文件夹", { description: directoryHandle.name });
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') {
@@ -58,7 +71,7 @@ export function FileSelector({ onFileSelect, onLogout }: FileSelectorProps) {
                 className="flex-1"
                 readOnly
               />
-              <Button variant="outline" size="icon" onClick={handleDirectoryBrowse}>
+              <Button variant="outline" size="icon" onClick={() => handleDirectoryBrowse()}>
                 <Folder className="h-4 w-4" />
               </Button>
             </div>

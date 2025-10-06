@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Slot } from "@radix-ui/react-slot@1.1.2";
-import { VariantProps, cva } from "class-variance-authority@0.7.1";
-import { PanelLeftIcon } from "lucide-react@0.487.0";
+import { Slot } from "@radix-ui/react-slot";
+import { VariantProps, cva } from "class-variance-authority";
+import { PanelLeftIcon } from "lucide-react";
 
 import { useIsMobile } from "./use-mobile";
 import { cn } from "./utils";
@@ -267,7 +267,7 @@ function SidebarTrigger({
       variant="ghost"
       size="icon"
       className={cn("size-7", className)}
-      onClick={(event) => {
+      onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
         onClick?.(event);
         toggleSidebar();
       }}
@@ -348,7 +348,7 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="sidebar-footer"
       data-sidebar="footer"
-      className={cn("flex flex-col gap-2 p-2", className)}
+      className={cn("flex flex-col gap-2 p-2 overflow-visible", className)}
       {...props}
     />
   );

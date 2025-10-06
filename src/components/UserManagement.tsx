@@ -24,7 +24,7 @@ import {
   Calendar,
   Clock
 } from "lucide-react";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 
 interface User {
   id: string;
@@ -297,7 +297,7 @@ export function UserManagement() {
               </div>
               <Switch
                 checked={formData.permissions.includes(permission.id)}
-                onCheckedChange={(checked) => handlePermissionChange(permission.id, checked)}
+                onCheckedChange={(checked: boolean) => handlePermissionChange(permission.id, checked)}
               />
             </div>
           ))}
