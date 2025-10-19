@@ -1,7 +1,7 @@
 
-  # MoFox Bot Web UI
+  # Fluid Glass UI Design
 
-  This is a code bundle for MoFox Bot Web UI. The original project is available at https://www.figma.com/design/diawf3bs6LgZcQ2tshnj9j/MoFox-Bot-Web-UI.
+  This is a code bundle for Fluid Glass UI Design. The original project is available at https://www.figma.com/design/LyzJZH4Z7W8VsfTt6EHC7t/Fluid-Glass-UI-Design.
 
   ## Running the code
 
