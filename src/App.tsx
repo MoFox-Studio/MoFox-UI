@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster } from './components/ui/sonner';
 import { LoginScreen } from './components/LoginScreen';
 import { AppShell } from './components/AppShell';

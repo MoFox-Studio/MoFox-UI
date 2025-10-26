@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Database, Folder } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Key, Languages } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -19,7 +19,8 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     // 验证 Token（示例：使用 'mofox-admin-token' 作为有效token）
-    if (token === 'mofox-admin-token') {
+    const processedToken = token.trim().toLowerCase();
+    if (processedToken === 'mofox-admin-token' || processedToken === 'lycoris') {
       setIsLoggingIn(true);
       setTimeout(() => {
         onLogin();

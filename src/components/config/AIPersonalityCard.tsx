@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Brain } from 'lucide-react';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
@@ -13,6 +13,29 @@ export function AIPersonalityCard() {
   const [useExpression, setUseExpression] = useState(true);
   const [learnExpression, setLearnExpression] = useState(false);
   const [learningStrength, setLearningStrength] = useState([50]);
+  const [corePersonality, setCorePersonality] = useState('');
+  const [secondaryPersonality, setSecondaryPersonality] = useState('');
+  const [systemPrompt, setSystemPrompt] = useState('');
+
+  useEffect(() => {
+    fetch('/config/bot')
+      .then(res => res.json())
+      .then(data => {
+        if (data.personality) {
+          setCorePersonality(data.personality.personality_core || '');
+          setSecondaryPersonality(data.personality.personality_side || '');
+          setSystemPrompt(data.personality.reply_style || '');
+        }
+        if (data.expression && data.expression.rules && data.expression.rules.length > 0) {
+          const globalRule = data.expression.rules.find((rule: any) => rule.chat_stream_id === "");
+          if (globalRule) {
+            setUseExpression(globalRule.use_expression);
+            setLearnExpression(globalRule.learn_expression);
+            setLearningStrength([globalRule.learning_strength * 100]);
+          }
+        }
+      });
+  }, []);
 
   return (
     <div className="glass-card p-6 space-y-6">
@@ -32,6 +55,8 @@ export function AIPersonalityCard() {
           <div className="space-y-2">
             <Label>{language === 'zh' ? '核心人格' : 'Core Personality'}</Label>
             <Textarea
+              value={corePersonality}
+              onChange={(e) => setCorePersonality(e.target.value)}
               placeholder={language === 'zh' ? '描述机器人的核心性格特征...' : 'Describe the bot\'s core personality...'}
               className="glass border-border focus:border-primary transition-all min-h-[100px] resize-none"
             />
@@ -43,6 +68,8 @@ export function AIPersonalityCard() {
           <div className="space-y-2">
             <Label>{language === 'zh' ? '辅助人格' : 'Secondary Personality'}</Label>
             <Textarea
+              value={secondaryPersonality}
+              onChange={(e) => setSecondaryPersonality(e.target.value)}
               placeholder={language === 'zh' ? '描述机器人的次要性格特征...' : 'Describe the bot\'s secondary traits...'}
               className="glass border-border focus:border-primary transition-all min-h-[100px] resize-none"
             />
@@ -54,6 +81,8 @@ export function AIPersonalityCard() {
           <div className="space-y-2">
             <Label>{t.config.personality.systemPrompt}</Label>
             <Textarea
+              value={systemPrompt}
+              onChange={(e) => setSystemPrompt(e.target.value)}
               placeholder={language === 'zh' ? '输入系统提示词...' : 'Enter system prompt...'}
               className="glass border-border focus:border-primary transition-all min-h-[100px] resize-none"
             />

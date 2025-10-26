@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, Pause, Play, Trash2, Circle } from 'lucide-react';
 import { Button } from './ui/button';
 import { useLanguage } from '../i18n/LanguageContext';

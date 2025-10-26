@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Cpu, Plus, X } from 'lucide-react';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
@@ -71,32 +71,77 @@ export function ModelConfigCard() {
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
 
-  const [apiProviders, setApiProviders] = useState<ApiProvider[]>([
-    {
-      id: '1',
-      name: 'OpenAI',
-      baseUrl: 'https://api.openai.com/v1',
-      apiKey: '',
-      timeout: 30,
-    },
-  ]);
+  const [apiProviders, setApiProviders] = useState<ApiProvider[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
+  const [taskMapping, setTaskMapping] = useState<Record<string, string>>({});
 
-  const [models, setModels] = useState<Model[]>([
-    {
-      id: '1',
-      modelIdentifier: 'gpt-4-turbo',
-      name: 'GPT-4 Turbo',
-      priceIn: 0.01,
-      priceOut: 0.03,
-      apiProvider: '1',
-    },
-  ]);
+  useEffect(() => {
+    fetch('/config/model')
+      .then(res => res.json())
+      .then(data => {
+        const providers = data.api_providers.map((p: any, index: number) => ({
+          id: index.toString(),
+          name: p.name,
+          baseUrl: p.base_url,
+          apiKey: Array.isArray(p.api_key) ? p.api_key.join(', ') : p.api_key,
+          timeout: p.timeout,
+        }));
+        setApiProviders(providers);
+        if (providers.length > 0) {
+          setSelectedProviderId(providers[0].id);
+        }
 
-  const [taskMapping, setTaskMapping] = useState<Record<string, string>>({
-    reply: '1',
-    decision: '1',
-    emotion: '1',
-  });
+        const loadedModels = data.models.map((m: any, index: number) => {
+          const provider = providers.find((p: any) => p.name === m.api_provider);
+          return {
+            id: index.toString(),
+            modelIdentifier: m.model_identifier,
+            name: m.name,
+            priceIn: m.price_in || 0,
+            priceOut: m.price_out || 0,
+            apiProvider: provider ? provider.id : '',
+          };
+        });
+        setModels(loadedModels);
+        if (loadedModels.length > 0) {
+          setSelectedModelId(loadedModels[0].id);
+        }
+
+        const newTaskMapping: Record<string, string> = {};
+        const keyMap: Record<string, string> = {
+          replyer: 'reply',
+          planner: 'decision',
+          emotion: 'emotion',
+          mood: 'mood',
+          vlm: 'image',
+          emoji_vlm: 'emoji',
+          utils_video: 'video',
+          voice: 'voice',
+          tool_use: 'tool',
+          schedule_generator: 'schedule',
+          anti_injection: 'anti_injection',
+          monthly_plan_generator: 'month_plan',
+          relationship_tracker: 'relation',
+          embedding: 'embedding',
+          lpmm_entity_extract: 'entity',
+          lpmm_rdf_build: 'rdf',
+          lpmm_qa: 'qa',
+        };
+
+        for (const taskKey in data.model_task_config) {
+          const taskConfig = data.model_task_config[taskKey];
+          if (taskConfig.model_list && taskConfig.model_list.length > 0) {
+            const modelName = taskConfig.model_list[0];
+            const model = loadedModels.find((m: any) => m.name === modelName);
+            if (model) {
+              const mappedKey = keyMap[taskKey] || taskKey;
+              newTaskMapping[mappedKey] = model.id;
+            }
+          }
+        }
+        setTaskMapping(newTaskMapping);
+      });
+  }, []);
 
   const addProvider = () => {
     const newProvider: ApiProvider = {
@@ -118,7 +163,7 @@ export function ModelConfigCard() {
   };
 
   const updateProvider = (id: string, field: keyof ApiProvider, value: string | number) => {
-    setApiProviders(apiProviders.map(p => 
+    setApiProviders(apiProviders.map(p =>
       p.id === id ? { ...p, [field]: value } : p
     ));
   };
@@ -144,7 +189,7 @@ export function ModelConfigCard() {
   };
 
   const updateModel = (id: string, field: keyof Model, value: string | number) => {
-    setModels(models.map(m => 
+    setModels(models.map(m =>
       m.id === id ? { ...m, [field]: value } : m
     ));
   };

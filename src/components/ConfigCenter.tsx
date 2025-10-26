@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Save } from 'lucide-react';
 import { Button } from './ui/button';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { useLanguage } from '../i18n/LanguageContext';
 import { DatabaseSystemCard } from './config/DatabaseSystemCard';
 import { BotIdentityPermissionsCard } from './config/BotIdentityPermissionsCard';

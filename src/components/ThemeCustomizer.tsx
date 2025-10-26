@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, type Variants } from 'framer-motion';
 import { Palette, Check } from 'lucide-react';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { useLanguage } from '../i18n/LanguageContext';
 
 interface Theme {
@@ -101,10 +101,10 @@ export function ThemeCustomizer({ currentTheme, onApplyTheme }: ThemeCustomizerP
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 15 },
-    show: { 
-      opacity: 1, 
+    show: {
+      opacity: 1,
       y: 0,
       transition: {
         duration: 0.4,

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bot, X, Plus } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -14,14 +14,32 @@ interface MasterUser {
 
 export function BotIdentityPermissionsCard() {
   const { t, language } = useLanguage();
-  const [aliases, setAliases] = useState<string[]>(['小狐', 'MoFox']);
-  const [commandPrefixes, setCommandPrefixes] = useState<string[]>(['/', '!', '.']);
-  const [masterUsers, setMasterUsers] = useState<MasterUser[]>([
-    { id: '1', platform: 'qq', userId: '123456789' },
-  ]);
+  const [platform, setPlatform] = useState('');
+  const [qqAccount, setQqAccount] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [aliases, setAliases] = useState<string[]>([]);
+  const [commandPrefixes, setCommandPrefixes] = useState<string[]>([]);
+  const [masterUsers, setMasterUsers] = useState<MasterUser[]>([]);
   
   const [aliasInput, setAliasInput] = useState('');
   const [prefixInput, setPrefixInput] = useState('');
+
+  useEffect(() => {
+    fetch('/config/bot')
+      .then(res => res.json())
+      .then(data => {
+        setPlatform(data.bot.platform);
+        setQqAccount(data.bot.qq_account);
+        setNickname(data.bot.nickname);
+        setAliases(data.bot.alias_names);
+        setCommandPrefixes(data.command.command_prefixes);
+        setMasterUsers(data.permission.master_users.map((user: string[], index: number) => ({
+          id: index.toString(),
+          platform: user[0],
+          userId: user[1],
+        })));
+      });
+  }, []);
 
   const addAlias = () => {
     if (aliasInput.trim() && !aliases.includes(aliasInput.trim())) {
@@ -74,6 +92,8 @@ export function BotIdentityPermissionsCard() {
         <div className="space-y-2">
           <Label>{language === 'zh' ? '平台' : 'Platform'}</Label>
           <Input
+            value={platform}
+            onChange={(e) => setPlatform(e.target.value)}
             placeholder="qq"
             className="glass border-border focus:border-primary transition-all"
           />
@@ -82,6 +102,8 @@ export function BotIdentityPermissionsCard() {
         <div className="space-y-2">
           <Label>{language === 'zh' ? 'QQ 账号' : 'QQ Account'}</Label>
           <Input
+            value={qqAccount}
+            onChange={(e) => setQqAccount(e.target.value)}
             placeholder="2012345678"
             className="glass border-border focus:border-primary transition-all"
           />
@@ -90,6 +112,8 @@ export function BotIdentityPermissionsCard() {
         <div className="space-y-2">
           <Label>{language === 'zh' ? '昵称' : 'Nickname'}</Label>
           <Input
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
             placeholder="MoFox"
             className="glass border-border focus:border-primary transition-all"
           />

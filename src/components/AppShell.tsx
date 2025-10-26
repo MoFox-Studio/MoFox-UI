@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { LayoutDashboard, Settings, Terminal, Palette, LogOut, Sun, Moon, Languages } from 'lucide-react';
 import { Button } from './ui/button';
 import { useLanguage } from '../i18n/LanguageContext';
