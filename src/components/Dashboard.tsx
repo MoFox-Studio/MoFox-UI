@@ -235,6 +235,41 @@ export function Dashboard() {
   };
 
   // 处理重启服务的操作
+  // 该函数已在上方定义，避免重复声明
+
+  // 处理清空缓存的操作
+  // 该函数已在上方定义，避免重复声明
+
+  // 处理查看日志的操作
+  const handleViewLogs = () => {
+    toast.info(language === 'zh' ? '跳转到日志查看器' : 'Jump to log viewer');
+  };
+
+  // 处理启动主程序的操作
+  const handleStartProgram = async () => {
+    toast.loading(language === 'zh' ? '正在启动主程序...' : 'Starting main program...', { id: 'start' });
+    try {
+      // 这里可以调用启动主程序的API或命令
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 模拟启动延迟
+      toast.success(language === 'zh' ? '主程序已启动' : 'Main program started', { id: 'start' });
+    } catch (error) {
+      toast.error(language === 'zh' ? '启动主程序失败' : 'Failed to start main program', { id: 'start' });
+    }
+  };
+
+  // 处理关闭主程序的操作
+  const handleStopProgram = async () => {
+    toast.loading(language === 'zh' ? '正在关闭主程序...' : 'Stopping main program...', { id: 'stop' });
+    try {
+      // 这里可以调用关闭主程序的API或命令
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 模拟关闭延迟
+      toast.success(language === 'zh' ? '主程序已关闭' : 'Main program stopped', { id: 'stop' });
+    } catch (error) {
+      toast.error(language === 'zh' ? '关闭主程序失败' : 'Failed to stop main program', { id: 'stop' });
+    }
+  };
+
+  // 处理刷新服务的操作
   const handleRestart = async () => {
     toast.loading(language === 'zh' ? '正在重启服务...' : 'Restarting service...', { id: 'restart' });
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -246,11 +281,6 @@ export function Dashboard() {
     toast.loading(language === 'zh' ? '正在清空缓存...' : 'Clearing cache...', { id: 'cache' });
     await new Promise(resolve => setTimeout(resolve, 1500));
     toast.success(language === 'zh' ? '缓存已清空' : 'Cache cleared', { id: 'cache' });
-  };
-
-  // 处理查看日志的操作
-  const handleViewLogs = () => {
-    toast.info(language === 'zh' ? '跳转到日志查看器' : 'Jump to log viewer');
   };
 
   // 刷新每日引言
@@ -393,30 +423,46 @@ export function Dashboard() {
             </div>
 
             <div className="space-y-3">
-              <Button
-                onClick={handleRestart}
-                className="w-full justify-start gap-3 glass-hover h-auto py-4 px-4 bg-primary/10 border border-primary/30 hover:border-primary text-foreground"
-              >
-                <RefreshCw className="w-5 h-5 text-primary" />
-                <span>{t.dashboard.restartBot}</span>
-              </Button>
-
-              <Button
-                onClick={handleClearCache}
-                className="w-full justify-start gap-3 glass-hover h-auto py-4 px-4 bg-warning/10 border border-warning/30 hover:border-warning text-foreground"
-              >
-                <Trash2 className="w-5 h-5 text-warning" />
-                <span>{t.dashboard.clearCache}</span>
-              </Button>
-
-              <Button
-                onClick={handleViewLogs}
-                className="w-full justify-start gap-3 glass-hover h-auto py-4 px-4 bg-secondary/10 border border-secondary/30 hover:border-secondary text-foreground"
-              >
-                <FileText className="w-5 h-5 text-secondary" />
-                <span>{language === 'zh' ? '查看完整日志' : 'View Full Logs'}</span>
-              </Button>
-            </div>
+                <Button
+                  onClick={handleStartProgram}
+                  className="w-full justify-start gap-3 glass-hover h-auto py-4 px-4 bg-success/10 border border-success/30 hover:border-success text-foreground"
+                >
+                  <Power className="w-5 h-5 text-success" />
+                  <span>{language === 'zh' ? '启动主程序' : 'Start Program'}</span>
+                </Button>
+  
+                <Button
+                  onClick={handleStopProgram}
+                  className="w-full justify-start gap-3 glass-hover h-auto py-4 px-4 bg-error/10 border border-error/30 hover:border-error text-foreground"
+                >
+                  <Power className="w-5 h-5 text-error" />
+                  <span>{language === 'zh' ? '关闭主程序' : 'Stop Program'}</span>
+                </Button>
+  
+                <Button
+                  onClick={handleRestart}
+                  className="w-full justify-start gap-3 glass-hover h-auto py-4 px-4 bg-primary/10 border border-primary/30 hover:border-primary text-foreground"
+                >
+                  <RefreshCw className="w-5 h-5 text-primary" />
+                  <span>{t.dashboard.restartBot}</span>
+                </Button>
+  
+                <Button
+                  onClick={handleClearCache}
+                  className="w-full justify-start gap-3 glass-hover h-auto py-4 px-4 bg-warning/10 border border-warning/30 hover:border-warning text-foreground"
+                >
+                  <Trash2 className="w-5 h-5 text-warning" />
+                  <span>{t.dashboard.clearCache}</span>
+                </Button>
+  
+                <Button
+                  onClick={handleViewLogs}
+                  className="w-full justify-start gap-3 glass-hover h-auto py-4 px-4 bg-secondary/10 border border-secondary/30 hover:border-secondary text-foreground"
+                >
+                  <FileText className="w-5 h-5 text-secondary" />
+                  <span>{language === 'zh' ? '查看完整日志' : 'View Full Logs'}</span>
+                </Button>
+              </div>
 
             {/* 每日引言 */}
             <div className="pt-3 mt-3 border-t border-border relative">
