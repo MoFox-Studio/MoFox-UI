@@ -52,11 +52,14 @@
             "@types/react": "^19.2.2",
             "@types/react-dom": "^19.2.2",
             "@vitejs/plugin-react-swc": "^4.2.0",
-            "vite": "^7.1.12"
+            "vite": "^7.1.12",
+            "concurrently": "^8.2.2",
+            "wait-on": "^7.2.0"
       },
       "scripts": {
             "dev": "vite",
-            "backend": "uvicorn python.main:app --host 127.0.0.1 --port 8001",
-            "build": "vite build"
+            "backend": "uvicorn python.main:app --host 127.0.0.1 --port 8001 --reload",
+            "build": "vite build",
+            "start": "concurrently \"npm:backend\" \"wait-on http://127.0.0.1:8001 && npm:dev\""
       }
 }

@@ -8,6 +8,11 @@ import tomlkit
 import os
 # 导入 json 模块 (虽然在此文件中未使用，但通常在 FastAPI 应用中很有用)
 import json
+# 导入 socket 和 errno 模块，用于检查端口
+import socket
+import errno
+from typing import List
+from pydantic import BaseModel
 
 # 创建 FastAPI 应用实例
 app = FastAPI()
@@ -127,6 +132,29 @@ def get_app_status():
     if STARTUP_ERROR:
         return {"status": "error", "message": STARTUP_ERROR}
     return {"status": "ok", "message": "应用程序已成功启动"}
+
+
+class CheckPortsRequest(BaseModel):
+    ports: List[int]
+
+def is_port_in_use(port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind(("127.0.0.1", port))
+            return False
+        except OSError as e:
+            return e.errno == errno.EADDRINUSE
+
+@app.post("/api/check-ports")
+async def check_ports(request: CheckPortsRequest):
+    """
+    检查指定的端口列表是否被占用。
+    """
+    results = []
+    for port in request.ports:
+        in_use = is_port_in_use(port)
+        results.append({"port": port, "status": "occupied" if in_use else "free"})
+    return results
 
 
 def find_log_file():

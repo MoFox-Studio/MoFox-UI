@@ -21,6 +21,7 @@ import { StartupErrorDialog } from './components/StartupErrorDialog';
 // 导入语言提供者，用于国际化
 import { LanguageProvider } from './i18n/LanguageContext';
 import { LogProvider } from './logs/LogContext';
+import { toast } from 'sonner';
 
 // 定义主题对象的接口
 export interface Theme {
@@ -131,21 +132,58 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 副作用钩子：检查后端启动状态
+  // 副作用钩子：检查后端启动状态和备用端口
   useEffect(() => {
-    const checkStatus = async () => {
+    const checkBackend = async () => {
+      // 1. 检查后端主要状态
       try {
-        const response = await fetch('/api/status');
-        const data = await response.json();
-        if (data.status === 'error') {
-          setStartupError(data.message);
+        const statusResponse = await fetch('/api/status');
+        const statusData = await statusResponse.json();
+        if (statusData.status === 'error') {
+          setStartupError(statusData.message);
+          return; // 如果有启动错误，就不再检查端口
         }
       } catch (error) {
         console.error("无法连接到后端:", error);
-        setStartupError("无法连接到后端服务。请确保后端正在运行，并且端口（默认为 8001）未被防火墙或杀毒软件阻止。");
+        setStartupError("无法连接到后端服务。请确保后端正在运行，并且代理配置正确。");
+        return;
+      }
+
+      // 2. 检查备用端口状态
+      try {
+        const portsToCheck = [31415, 35023];
+        const portsResponse = await fetch('/api/check-ports', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ports: portsToCheck }),
+        });
+        const portsData = await portsResponse.json();
+        
+        let occupiedPorts: number[] = [];
+        for (const result of portsData) {
+          if (result.status === 'occupied') {
+            occupiedPorts.push(result.port);
+          }
+        }
+
+        if (occupiedPorts.length > 0) {
+          toast.warning(
+            `注意：备用端口 ${occupiedPorts.join(', ')} 已被占用。`,
+            {
+              description: '这只在主端口11451不可用时才会成为问题。',
+              duration: 10000,
+            }
+          );
+        }
+      } catch (error) {
+        console.error("无法检查备用端口状态:", error);
+        // 这是一个非关键性检查，所以我们只在控制台记录错误
       }
     };
-    checkStatus();
+
+    // 在WebUI完全加载后稍等片刻再执行检查
+    const timer = setTimeout(checkBackend, 2000);
+    return () => clearTimeout(timer);
   }, []);
 
   // 根据 currentView 状态渲染对应的视图组件
