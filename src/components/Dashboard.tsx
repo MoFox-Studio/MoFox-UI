@@ -1,10 +1,17 @@
+// 导入React的核心库和钩子
 import { useState, useEffect } from 'react';
+// 导入framer-motion库，用于实现动画效果
 import { motion, type Variants } from 'framer-motion';
+// 从lucide-react库导入图标组件
 import { Activity, MessageSquare, Command, Users, Power, RefreshCw, Trash2, FileText, Sparkles } from 'lucide-react';
+// 导入自定义的Button组件
 import { Button } from './ui/button';
+// 导入sonner库的toast函数，用于显示通知
 import { toast } from 'sonner';
+// 导入语言上下文钩子，用于国际化
 import { useLanguage } from '../i18n/LanguageContext';
 
+// 每日引言数据
 const dailyQuotes = [
   // 科技与设计
   { text: "简单是终极的复杂", author: "达芬奇", en: "Simplicity is the ultimate sophistication." },
@@ -121,7 +128,7 @@ const dailyQuotes = [
   { text: "别为自己的懒惰找借口，行动才是硬道理", author: "佚名", en: "Don't make excuses for laziness, action is what matters." },
   { text: "目标再远大，也要从眼前的小事做起", author: "列宁", en: "No matter how big the goal, start with small things." },
   { text: "行动起来，才能摆脱焦虑和迷茫", author: "刘同", en: "Take action to overcome anxiety and confusion." },
-  { text: "别让'���明天'，变成'等永远'", author: "佚名", en: "Don't let 'tomorrow' become 'never'." },
+  { text: "别让'明天'，变成'等永远'", author: "佚名", en: "Don't let 'tomorrow' become 'never'." },
   { text: "只有行动，才能让想法变成现实", author: "爱迪生", en: "Only action can turn ideas into reality." },
   { text: "拖延的本质，是对自己的不负责任", author: "佚名", en: "Procrastination is irresponsibility to yourself." },
   { text: "想到就做，别让犹豫耽误了你的人生", author: "巴菲特", en: "Think and do, don't let hesitation delay your life." },
@@ -194,13 +201,18 @@ const dailyQuotes = [
   { text: "好的朋友，会和你一起成长，一起变得更好", author: "佚名", en: "Good friends grow together and become better together." },
 ];
 
+// 仪表盘主组件
 export function Dashboard() {
+  // 使用语言上下文
   const { t, language } = useLanguage();
+  // 状态：系统运行时长
   const [uptime, setUptime] = useState(0);
+  // 状态：每日引言，随机选择一条
   const [dailyQuote, setDailyQuote] = useState(() => {
     return dailyQuotes[Math.floor(Math.random() * dailyQuotes.length)];
   });
 
+  // 副作用钩子：每秒更新运行时长
   useEffect(() => {
     const interval = setInterval(() => {
       setUptime((prev) => prev + 1);
@@ -208,6 +220,7 @@ export function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  // 格式化运行时长显示
   const formatUptime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -218,27 +231,32 @@ export function Dashboard() {
     return `${hours}h ${minutes}m ${secs}s`;
   };
 
+  // 处理重启服务的操作
   const handleRestart = async () => {
     toast.loading(language === 'zh' ? '正在重启服务...' : 'Restarting service...', { id: 'restart' });
     await new Promise(resolve => setTimeout(resolve, 2000));
     toast.success(language === 'zh' ? '服务已重启' : 'Service restarted', { id: 'restart' });
   };
 
+  // 处理清空缓存的操作
   const handleClearCache = async () => {
     toast.loading(language === 'zh' ? '正在清空缓存...' : 'Clearing cache...', { id: 'cache' });
     await new Promise(resolve => setTimeout(resolve, 1500));
     toast.success(language === 'zh' ? '缓存已清空' : 'Cache cleared', { id: 'cache' });
   };
 
+  // 处理查看日志的操作
   const handleViewLogs = () => {
     toast.info(language === 'zh' ? '跳转到日志查看器' : 'Jump to log viewer');
   };
 
+  // 刷新每日引言
   const refreshQuote = () => {
     const newQuote = dailyQuotes[Math.floor(Math.random() * dailyQuotes.length)];
     setDailyQuote(newQuote);
   };
 
+  // 最近活动数据
   const recentActivities = language === 'zh' ? [
     { time: '2分钟前', message: '用户 user123 被添加为 Master', type: 'info' },
     { time: '15分钟前', message: '配置项 personality_core 被修改', type: 'warning' },
@@ -253,16 +271,18 @@ export function Dashboard() {
     { time: '3 hours ago', message: 'System auto-backup completed', type: 'success' },
   ];
 
+  // 容器动画变体
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.06
+        staggerChildren: 0.06 // 子元素交错动画
       }
     }
   };
 
+  // 列表项动画变体
   const itemVariants: Variants = {
     hidden: { opacity: 0, y: 15 },
     show: {
@@ -278,7 +298,7 @@ export function Dashboard() {
   return (
     <div className="h-full overflow-auto p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* 页面标题 */}
         <motion.div 
           className="mb-8"
           initial={{ opacity: 0, y: -20 }}
@@ -289,20 +309,22 @@ export function Dashboard() {
           <p className="text-muted-foreground mt-2">{language === 'zh' ? '欢迎回来，系统运行正常' : 'Welcome back, system running normally'}</p>
         </motion.div>
 
-        {/* Widgets Grid */}
+        {/* 小组件网格布局 */}
         <motion.div 
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
           variants={containerVariants}
           initial="hidden"
           animate="show"
         >
-          {/* Bot Status */}
+          {/* 机器人状态卡片 */}
           <motion.div className="glass-card p-6 space-y-4" variants={itemVariants}>
+            {/* 卡片标题 */}
             <div className="flex items-center justify-between">
               <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>{t.dashboard.systemStatus}</h3>
               <Activity className="w-5 h-5 text-primary" />
             </div>
 
+            {/* 状态显示 */}
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-full bg-success/20 border-2 border-success flex items-center justify-center relative">
                 <Power className="w-8 h-8 text-success" />
@@ -313,6 +335,7 @@ export function Dashboard() {
               </div>
             </div>
 
+            {/* 详细信息 */}
             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
               <div>
                 <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{language === 'zh' ? '昵称' : 'Nickname'}</p>
@@ -333,7 +356,7 @@ export function Dashboard() {
             </div>
           </motion.div>
 
-          {/* Core Metrics */}
+          {/* 核心数据卡片 */}
           <motion.div className="glass-card p-6 space-y-4" variants={itemVariants}>
             <div className="flex items-center justify-between">
               <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>{language === 'zh' ? '核心数据' : 'Core Metrics'}</h3>
@@ -373,7 +396,7 @@ export function Dashboard() {
             </div>
           </motion.div>
 
-          {/* Quick Actions */}
+          {/* 快速操作卡片 */}
           <motion.div className="glass-card p-6 space-y-4" variants={itemVariants}>
             <div className="flex items-center justify-between">
               <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>{t.dashboard.quickActions}</h3>
@@ -406,7 +429,7 @@ export function Dashboard() {
               </Button>
             </div>
 
-            {/* Daily Quote */}
+            {/* 每日引言 */}
             <div className="pt-3 mt-3 border-t border-border relative">
               <div className="absolute -top-6 -right-6 w-48 h-48 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-full blur-[80px] pointer-events-none" />
               
@@ -447,7 +470,7 @@ export function Dashboard() {
             </div>
           </motion.div>
 
-          {/* Recent Activity */}
+          {/* 最近活动卡片 */}
           <motion.div className="glass-card p-6 space-y-4" variants={itemVariants}>
             <div className="flex items-center justify-between">
               <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>{t.dashboard.recentLogs}</h3>

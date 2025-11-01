@@ -99,12 +99,27 @@ export const translations = {
       
       // AI人格
       personality: {
-        title: 'AI人格设置',
+        title: 'AI人格与表达',
         name: '机器人名称',
         personality: '人格描述',
         temperature: '创造性（Temperature）',
         maxTokens: '最大回复长度',
         systemPrompt: '系统提示词',
+        core: '核心人格',
+        corePlaceholder: '描述机器人的核心性格特征...',
+        coreDescription: '定义机器人的基本性格、态度和价值观',
+        secondary: '辅助人格',
+        secondaryPlaceholder: '描述机器人的次要性格特征...',
+        secondaryDescription: '补充的性格特征，在特定情况下展现',
+        systemPromptPlaceholder: '输入系统提示词...',
+        systemPromptDescription: 'AI 模型的系统级指令',
+        useExpression: '使用表达式库',
+        useExpressionDescription: '从预设的表达式中随机选择',
+        learnExpression: '学习用户表达',
+        learnExpressionDescription: '从对话中学习新的表达方式',
+        learningStrength: '学习强度',
+        conservative: '保守',
+        aggressive: '激进',
       },
       
       // 聊天交互
@@ -296,12 +311,27 @@ export const translations = {
       
       // AI Personality
       personality: {
-        title: 'AI Personality',
+        title: 'AI Personality & Expression',
         name: 'Bot Name',
         personality: 'Personality',
         temperature: 'Temperature',
         maxTokens: 'Max Tokens',
         systemPrompt: 'System Prompt',
+        core: 'Core Personality',
+        corePlaceholder: 'Describe the bot\'s core personality...',
+        coreDescription: 'Define the bot\'s basic character, attitudes, and values',
+        secondary: 'Secondary Personality',
+        secondaryPlaceholder: 'Describe the bot\'s secondary traits...',
+        secondaryDescription: 'Additional traits displayed in specific situations',
+        systemPromptPlaceholder: 'Enter system prompt...',
+        systemPromptDescription: 'System-level instructions for AI model',
+        useExpression: 'Use Expression Library',
+        useExpressionDescription: 'Randomly select from preset expressions',
+        learnExpression: 'Learn User Expressions',
+        learnExpressionDescription: 'Learn new expressions from conversations',
+        learningStrength: 'Learning Strength',
+        conservative: 'Conservative',
+        aggressive: 'Aggressive',
       },
       
       // Chat Interaction
