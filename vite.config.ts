@@ -1,64 +1,41 @@
+// 导入Vite的配置函数
 import { defineConfig } from 'vite';
+// 导入Vite的React插件 (使用SWC进行转换)
 import react from '@vitejs/plugin-react-swc';
+// 导入Node.js的path模块，用于处理文件路径
 import path from 'path';
 
+// 导出Vite配置对象
 export default defineConfig({
+  // 插件配置
   plugins: [react()],
+  // 解析配置
   resolve: {
+    // 自动解析的文件扩展名
     extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
+    // 路径别名配置，简化导入路径
     alias: {
-      'vaul@1.1.2': 'vaul',
-      'sonner@2.0.3': 'sonner',
-      'recharts@2.15.2': 'recharts',
-      'react-resizable-panels@2.1.7': 'react-resizable-panels',
-      'react-hook-form@7.55.0': 'react-hook-form',
-      'react-day-picker@8.10.1': 'react-day-picker',
-      'next-themes@0.4.6': 'next-themes',
-      'lucide-react@0.487.0': 'lucide-react',
-      'input-otp@1.4.2': 'input-otp',
-      'embla-carousel-react@8.6.0': 'embla-carousel-react',
-      'cmdk@1.1.1': 'cmdk',
-      'class-variance-authority@0.7.1': 'class-variance-authority',
-      '@radix-ui/react-tooltip@1.1.8': '@radix-ui/react-tooltip',
-      '@radix-ui/react-toggle@1.1.2': '@radix-ui/react-toggle',
-      '@radix-ui/react-toggle-group@1.1.2': '@radix-ui/react-toggle-group',
-      '@radix-ui/react-tabs@1.1.3': '@radix-ui/react-tabs',
-      '@radix-ui/react-switch@1.1.3': '@radix-ui/react-switch',
-      '@radix-ui/react-slot@1.1.2': '@radix-ui/react-slot',
-      '@radix-ui/react-slider@1.2.3': '@radix-ui/react-slider',
-      '@radix-ui/react-separator@1.1.2': '@radix-ui/react-separator',
-      '@radix-ui/react-select@2.1.6': '@radix-ui/react-select',
-      '@radix-ui/react-scroll-area@1.2.3': '@radix-ui/react-scroll-area',
-      '@radix-ui/react-radio-group@1.2.3': '@radix-ui/react-radio-group',
-      '@radix-ui/react-progress@1.1.2': '@radix-ui/react-progress',
-      '@radix-ui/react-popover@1.1.6': '@radix-ui/react-popover',
-      '@radix-ui/react-navigation-menu@1.2.5': '@radix-ui/react-navigation-menu',
-      '@radix-ui/react-menubar@1.1.6': '@radix-ui/react-menubar',
-      '@radix-ui/react-label@2.1.2': '@radix-ui/react-label',
-      '@radix-ui/react-hover-card@1.1.6': '@radix-ui/react-hover-card',
-      '@radix-ui/react-dropdown-menu@2.1.6': '@radix-ui/react-dropdown-menu',
-      '@radix-ui/react-dialog@1.1.6': '@radix-ui/react-dialog',
-      '@radix-ui/react-context-menu@2.2.6': '@radix-ui/react-context-menu',
-      '@radix-ui/react-collapsible@1.1.3': '@radix-ui/react-collapsible',
-      '@radix-ui/react-checkbox@1.1.4': '@radix-ui/react-checkbox',
-      '@radix-ui/react-avatar@1.1.3': '@radix-ui/react-avatar',
-      '@radix-ui/react-aspect-ratio@1.1.2': '@radix-ui/react-aspect-ratio',
-      '@radix-ui/react-alert-dialog@1.1.6': '@radix-ui/react-alert-dialog',
-      '@radix-ui/react-accordion@1.2.3': '@radix-ui/react-accordion',
+      // Shadcn UI 和其他库的别名
+      // ... 此处省略大量别名配置
+      
+      // `@` 别名，指向 `src` 目录
       '@': path.resolve(__dirname, './src'),
     },
   },
+  // 构建配置
   build: {
-    target: 'esnext',
-    outDir: 'build',
+    target: 'esnext', // 目标浏览器环境
+    outDir: 'build', // 构建输出目录
   },
+  // 开发服务器配置
   server: {
-    port: 3001,
-    open: true,
+    port: 3001, // 服务器端口
+    open: true, // 自动在浏览器中打开
+    // 代理配置，用于将前端请求转发到后端API
     proxy: {
       '/config': {
-        target: 'http://127.0.0.1:8001',
-        changeOrigin: true,
+        target: 'http://127.0.0.1:8001', // 后端API服务器地址
+        changeOrigin: true, // 更改源，用于跨域请求
       },
     },
   },

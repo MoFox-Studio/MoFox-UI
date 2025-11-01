@@ -10,6 +10,7 @@ import { Button } from './ui/button';
 import { toast } from 'sonner';
 // 导入语言上下文钩子，用于国际化
 import { useLanguage } from '../i18n/LanguageContext';
+import { useLogs, LogLevel, LogEntry } from '../logs/LogContext';
 
 // 每日引言数据
 const dailyQuotes = [
@@ -203,14 +204,16 @@ const dailyQuotes = [
 
 // 仪表盘主组件
 export function Dashboard() {
-  // 使用语言上下文
+  // 使用语言上下文和日志上下文
   const { t, language } = useLanguage();
+  const { logs } = useLogs();
   // 状态：系统运行时长
   const [uptime, setUptime] = useState(0);
   // 状态：每日引言，随机选择一条
   const [dailyQuote, setDailyQuote] = useState(() => {
     return dailyQuotes[Math.floor(Math.random() * dailyQuotes.length)];
   });
+
 
   // 副作用钩子：每秒更新运行时长
   useEffect(() => {
@@ -256,20 +259,6 @@ export function Dashboard() {
     setDailyQuote(newQuote);
   };
 
-  // 最近活动数据
-  const recentActivities = language === 'zh' ? [
-    { time: '2分钟前', message: '用户 user123 被添加为 Master', type: 'info' },
-    { time: '15分钟前', message: '配置项 personality_core 被修改', type: 'warning' },
-    { time: '1小时前', message: '数据库连接池已优化', type: 'success' },
-    { time: '2小时前', message: '表情包模块已启用', type: 'info' },
-    { time: '3小时前', message: '系统执行了自动备份', type: 'success' },
-  ] : [
-    { time: '2 min ago', message: 'User user123 was added as Master', type: 'info' },
-    { time: '15 min ago', message: 'Config personality_core was modified', type: 'warning' },
-    { time: '1 hour ago', message: 'Database connection pool optimized', type: 'success' },
-    { time: '2 hours ago', message: 'Meme module enabled', type: 'info' },
-    { time: '3 hours ago', message: 'System auto-backup completed', type: 'success' },
-  ];
 
   // 容器动画变体
   const containerVariants = {
@@ -277,7 +266,7 @@ export function Dashboard() {
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.06 // 子元素交错动画
+        staggerChildren: 0.1 // 子元素交错动画
       }
     }
   };
@@ -478,23 +467,24 @@ export function Dashboard() {
             </div>
 
             <div className="space-y-3 max-h-[300px] overflow-auto">
-              {recentActivities.map((activity, index) => (
-                <motion.div 
-                  key={index} 
+              {logs.slice(-10).reverse().map((log, index) => (
+                <motion.div
+                  key={log.id}
                   className="flex gap-3 p-3 glass rounded-[var(--radius)] hover:border-primary/30 transition-all"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.08, duration: 0.3 }}
                   whileHover={{ x: 2, transition: { duration: 0.15 } }}
                 >
-                  <div className={`w-2 h-2 rounded-full mt-2 ${
-                    activity.type === 'success' ? 'bg-success' :
-                    activity.type === 'warning' ? 'bg-warning' :
+                  <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
+                    log.level === 'SUCCESS' ? 'bg-success' :
+                    log.level === 'WARN' ? 'bg-warning' :
+                    log.level === 'ERROR' ? 'bg-error' :
                     'bg-primary'
                   }`} />
                   <div className="flex-1 min-w-0">
-                    <p className="truncate">{activity.message}</p>
-                    <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{activity.time}</p>
+                    <p className="truncate" title={log.message}>{log.message}</p>
+                    <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{log.timestamp}</p>
                   </div>
                 </motion.div>
               ))}

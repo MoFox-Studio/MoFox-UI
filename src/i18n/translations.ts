@@ -1,6 +1,8 @@
+// 定义包含所有语言翻译的常量
 export const translations = {
+  // 中文翻译
   zh: {
-    // 通用
+    // 通用词汇
     common: {
       save: '保存',
       cancel: '取消',
@@ -211,218 +213,21 @@ export const translations = {
     },
   },
   
+  // 英文翻译
   en: {
-    // Common
-    common: {
-      save: 'Save',
-      cancel: 'Cancel',
-      confirm: 'Confirm',
-      delete: 'Delete',
-      edit: 'Edit',
-      close: 'Close',
-      loading: 'Loading...',
-      saving: 'Saving...',
-      success: 'Success',
-      error: 'Error',
-      warning: 'Warning',
-    },
-    
-    // Login Page
-    login: {
-      title: 'MoFox Bot',
-      subtitle: 'Management Control Center',
-      token: 'Access Token',
-      tokenPlaceholder: 'Enter your access token',
-      loginButton: 'Sign In',
-      loggingIn: 'Signing in...',
-      welcomeBack: 'Welcome back!',
-      loginSuccess: 'Login successful',
-      invalidToken: 'Invalid access token',
-    },
-    
-    // Sidebar Navigation
-    nav: {
-      dashboard: 'Dashboard',
-      config: 'Configuration',
-      logs: 'Log Viewer',
-      theme: 'Theme Customizer',
-      logout: 'Logout',
-    },
-    
-    // Dashboard
-    dashboard: {
-      title: 'Dashboard Overview',
-      systemStatus: 'System Status',
-      online: 'Online',
-      offline: 'Offline',
-      uptime: 'Uptime',
-      days: 'days',
-      hours: 'hours',
-      minutes: 'minutes',
-      cpuUsage: 'CPU Usage',
-      memoryUsage: 'Memory Usage',
-      activeUsers: 'Active Users',
-      users: 'users',
-      todayMessages: 'Today\'s Messages',
-      messages: 'messages',
-      quickActions: 'Quick Actions',
-      restartBot: 'Restart Bot',
-      clearCache: 'Clear Cache',
-      exportLogs: 'Export Logs',
-      backupConfig: 'Backup Config',
-      recentLogs: 'Recent Logs',
-      level: 'Level',
-      timestamp: 'Timestamp',
-      message: 'Message',
-      viewAll: 'View All',
-      dailyQuote: 'Daily Quote',
-      refresh: 'Refresh',
-    },
-    
-    // Configuration Center
-    config: {
-      title: 'Configuration Center',
-      saveChanges: 'Save Changes',
-      saveSuccess: 'Configuration saved successfully!',
-      
-      // Database System
-      database: {
-        title: 'Database System',
-        type: 'Database Type',
-        host: 'Host',
-        port: 'Port',
-        username: 'Username',
-        password: 'Password',
-        database: 'Database',
-        poolSize: 'Pool Size',
-      },
-      
-      // Bot Identity
-      bot: {
-        title: 'Bot Identity & Permissions',
-        token: 'Bot Token',
-        appId: 'Application ID',
-        appSecret: 'Application Secret',
-        permissions: 'Permissions',
-        adminOnly: 'Admin Only',
-        allowGroups: 'Allow Groups',
-        allowPrivate: 'Allow Private',
-      },
-      
-      // AI Personality
-      personality: {
-        title: 'AI Personality & Expression',
-        name: 'Bot Name',
-        personality: 'Personality',
-        temperature: 'Temperature',
-        maxTokens: 'Max Tokens',
-        systemPrompt: 'System Prompt',
-        core: 'Core Personality',
-        corePlaceholder: 'Describe the bot\'s core personality...',
-        coreDescription: 'Define the bot\'s basic character, attitudes, and values',
-        secondary: 'Secondary Personality',
-        secondaryPlaceholder: 'Describe the bot\'s secondary traits...',
-        secondaryDescription: 'Additional traits displayed in specific situations',
-        systemPromptPlaceholder: 'Enter system prompt...',
-        systemPromptDescription: 'System-level instructions for AI model',
-        useExpression: 'Use Expression Library',
-        useExpressionDescription: 'Randomly select from preset expressions',
-        learnExpression: 'Learn User Expressions',
-        learnExpressionDescription: 'Learn new expressions from conversations',
-        learningStrength: 'Learning Strength',
-        conservative: 'Conservative',
-        aggressive: 'Aggressive',
-      },
-      
-      // Chat Interaction
-      chat: {
-        title: 'Chat Interaction Logic',
-        replyDelay: 'Reply Delay (s)',
-        contextWindow: 'Context Window',
-        enableMentions: 'Enable Mentions',
-        enableEmoji: 'Enable Emoji',
-        enableVoice: 'Enable Voice',
-      },
-      
-      // Relationship Memory
-      memory: {
-        title: 'Relationship & Memory System',
-        enableMemory: 'Enable Memory',
-        memoryDays: 'Memory Retention (days)',
-        relationshipTracking: 'Relationship Tracking',
-        emotionalAnalysis: 'Emotional Analysis',
-        topicTracking: 'Topic Tracking',
-      },
-      
-      // Security Module
-      security: {
-        title: 'Security Module',
-        enableRateLimit: 'Enable Rate Limit',
-        maxRequestsPerMin: 'Max Requests/Min',
-        enableContentFilter: 'Enable Content Filter',
-        enableAntiSpam: 'Enable Anti-Spam',
-        blacklist: 'Blacklist',
-      },
-      
-      // Content Generation
-      content: {
-        title: 'Content Generation',
-        imageGeneration: 'Image Generation',
-        maxImagesPerDay: 'Max Images/Day',
-        enableMemes: 'Enable Memes',
-        enableStickers: 'Enable Stickers',
-        enableMarkdown: 'Enable Markdown',
-      },
-      
-      // Model Configuration
-      model: {
-        title: 'Model Configuration',
-        provider: 'Provider',
-        model: 'Model Name',
-        apiKey: 'API Key',
-        apiEndpoint: 'API Endpoint',
-        timeout: 'Timeout (s)',
-      },
-    },
-    
-    // Log Viewer
-    logs: {
-      title: 'Log Viewer',
-      filter: 'Filter Level',
-      all: 'All',
-      info: 'Info',
-      warning: 'Warning',
-      error: 'Error',
-      search: 'Search logs...',
-      clearLogs: 'Clear Logs',
-      exportLogs: 'Export Logs',
-      refreshLogs: 'Refresh Logs',
-    },
-    
-    // Theme Customizer
-    theme: {
-      title: 'Theme Customizer',
-      presetThemes: 'Preset Themes',
-      customTheme: 'Custom Theme',
-      themeName: 'Theme Name',
-      primaryColor: 'Primary Color',
-      secondaryColor: 'Secondary Color',
-      backgroundColor: 'Background Color',
-      applyTheme: 'Apply Theme',
-      themeApplied: 'Theme applied!',
-      
-      // Preset Theme Names
-      presets: {
-        cyberpunk: 'Cyberpunk',
-        ocean: 'Ocean Blue',
-        sunset: 'Sunset Gradient',
-        forest: 'Forest Green',
-        aurora: 'Aurora Dream',
-        neon: 'Neon Glow',
-      },
-    },
+    // 英文翻译的结构与中文相同，此处省略以保持简洁
+    // The structure for English translations is the same as Chinese, omitted here for brevity.
+    common: { save: 'Save', cancel: 'Cancel', confirm: 'Confirm', delete: 'Delete', edit: 'Edit', close: 'Close', loading: 'Loading...', saving: 'Saving...', success: 'Success', error: 'Error', warning: 'Warning' },
+    login: { title: 'MoFox Bot', subtitle: 'Management Control Center', token: 'Access Token', tokenPlaceholder: 'Enter your access token', loginButton: 'Sign In', loggingIn: 'Signing in...', welcomeBack: 'Welcome back!', loginSuccess: 'Login successful', invalidToken: 'Invalid access token' },
+    nav: { dashboard: 'Dashboard', config: 'Configuration', logs: 'Log Viewer', theme: 'Theme Customizer', logout: 'Logout' },
+    dashboard: { title: 'Dashboard Overview', systemStatus: 'System Status', online: 'Online', offline: 'Offline', uptime: 'Uptime', days: 'days', hours: 'hours', minutes: 'minutes', cpuUsage: 'CPU Usage', memoryUsage: 'Memory Usage', activeUsers: 'Active Users', users: 'users', todayMessages: "Today's Messages", messages: 'messages', quickActions: 'Quick Actions', restartBot: 'Restart Bot', clearCache: 'Clear Cache', exportLogs: 'Export Logs', backupConfig: 'Backup Config', recentLogs: 'Recent Logs', level: 'Level', timestamp: 'Timestamp', message: 'Message', viewAll: 'View All', dailyQuote: 'Daily Quote', refresh: 'Refresh' },
+    config: { title: 'Configuration Center', saveChanges: 'Save Changes', saveSuccess: 'Configuration saved successfully!', database: { title: 'Database System', type: 'Database Type', host: 'Host', port: 'Port', username: 'Username', password: 'Password', database: 'Database', poolSize: 'Pool Size' }, bot: { title: 'Bot Identity & Permissions', token: 'Bot Token', appId: 'Application ID', appSecret: 'Application Secret', permissions: 'Permissions', adminOnly: 'Admin Only', allowGroups: 'Allow Groups', allowPrivate: 'Allow Private' }, personality: { title: 'AI Personality & Expression', name: 'Bot Name', personality: 'Personality', temperature: 'Temperature', maxTokens: 'Max Tokens', systemPrompt: 'System Prompt', core: 'Core Personality', corePlaceholder: "Describe the bot's core personality...", coreDescription: "Define the bot's basic character, attitudes, and values", secondary: 'Secondary Personality', secondaryPlaceholder: "Describe the bot's secondary traits...", secondaryDescription: 'Additional traits displayed in specific situations', systemPromptPlaceholder: 'Enter system prompt...', systemPromptDescription: 'System-level instructions for AI model', useExpression: 'Use Expression Library', useExpressionDescription: 'Randomly select from preset expressions', learnExpression: 'Learn User Expressions', learnExpressionDescription: 'Learn new expressions from conversations', learningStrength: 'Learning Strength', conservative: 'Conservative', aggressive: 'Aggressive' }, chat: { title: 'Chat Interaction Logic', replyDelay: 'Reply Delay (s)', contextWindow: 'Context Window', enableMentions: 'Enable Mentions', enableEmoji: 'Enable Emoji', enableVoice: 'Enable Voice' }, memory: { title: 'Relationship & Memory System', enableMemory: 'Enable Memory', memoryDays: 'Memory Retention (days)', relationshipTracking: 'Relationship Tracking', emotionalAnalysis: 'Emotional Analysis', topicTracking: 'Topic Tracking' }, security: { title: 'Security Module', enableRateLimit: 'Enable Rate Limit', maxRequestsPerMin: 'Max Requests/Min', enableContentFilter: 'Enable Content Filter', enableAntiSpam: 'Enable Anti-Spam', blacklist: 'Blacklist' }, content: { title: 'Content Generation', imageGeneration: 'Image Generation', maxImagesPerDay: 'Max Images/Day', enableMemes: 'Enable Memes', enableStickers: 'Enable Stickers', enableMarkdown: 'Enable Markdown' }, model: { title: 'Model Configuration', provider: 'Provider', model: 'Model Name', apiKey: 'API Key', apiEndpoint: 'API Endpoint', timeout: 'Timeout (s)' } },
+    logs: { title: 'Log Viewer', filter: 'Filter Level', all: 'All', info: 'Info', warning: 'Warning', error: 'Error', search: 'Search logs...', clearLogs: 'Clear Logs', exportLogs: 'Export Logs', refreshLogs: 'Refresh Logs' },
+    theme: { title: 'Theme Customizer', presetThemes: 'Preset Themes', customTheme: 'Custom Theme', themeName: 'Theme Name', primaryColor: 'Primary Color', secondaryColor: 'Secondary Color', backgroundColor: 'Background Color', applyTheme: 'Apply Theme', themeApplied: 'Theme applied!', presets: { cyberpunk: 'Cyberpunk', ocean: 'Ocean Blue', sunset: 'Sunset Gradient', forest: 'Forest Green', aurora: 'Aurora Dream', neon: 'Neon Glow' } },
   },
 };
 
+// 定义语言类型
 export type Language = 'zh' | 'en';
+// 定义翻译对象的类型，基于中文翻译的结构
 export type Translations = typeof translations.zh;

@@ -78,7 +78,7 @@ export function AppShell({ children, currentView, onViewChange, onLogout, isDark
                 title={item.label} // 鼠标悬停提示
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 + index * 0.08, duration: 0.4 }} // 交错动画
+                transition={{ delay: 0.2 + index * 0.1, duration: 0.4 }} // 交错动画
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >

@@ -18,6 +18,7 @@ import { LogViewer } from './components/LogViewer';
 import { ThemeCustomizer } from './components/ThemeCustomizer';
 // 导入语言提供者，用于国际化
 import { LanguageProvider } from './i18n/LanguageContext';
+import { LogProvider } from './logs/LogContext';
 
 // 定义主题对象的接口
 export interface Theme {
@@ -152,43 +153,45 @@ export default function App() {
   // 如果用户已认证，显示应用主界面
   return (
     <LanguageProvider>
-      <AppShell
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        onLogout={handleLogout}
-        isDarkMode={isDarkMode}
-        onToggleDarkMode={toggleDarkMode}
-      >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentView}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ 
-              duration: 0.2, 
-              ease: [0.4, 0, 0.2, 1] 
-            }}
-            className="h-full w-full"
-          >
-            {renderView()}
-          </motion.div>
-        </AnimatePresence>
-      </AppShell>
-      <Toaster 
-        position="top-right" 
-        theme={isDarkMode ? "dark" : "light"}
-        toastOptions={{
-          style: {
-            background: isDarkMode ? '#1e293b' : '#ffffff',
-            color: isDarkMode ? '#f1f5f9' : '#0f172a',
-            border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
-            backdropFilter: 'none',
-            WebkitBackdropFilter: 'none',
-          },
-          className: '',
-        }}
-      />
+      <LogProvider>
+        <AppShell
+          currentView={currentView}
+          onViewChange={setCurrentView}
+          onLogout={handleLogout}
+          isDarkMode={isDarkMode}
+          onToggleDarkMode={toggleDarkMode}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentView}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{
+                duration: 0.2,
+                ease: [0.4, 0, 0.2, 1]
+              }}
+              className="h-full w-full"
+            >
+              {renderView()}
+            </motion.div>
+          </AnimatePresence>
+        </AppShell>
+        <Toaster
+          position="top-right"
+          theme={isDarkMode ? "dark" : "light"}
+          toastOptions={{
+            style: {
+              background: isDarkMode ? '#1e293b' : '#ffffff',
+              color: isDarkMode ? '#f1f5f9' : '#0f172a',
+              border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+              backdropFilter: 'none',
+              WebkitBackdropFilter: 'none',
+            },
+            className: '',
+          }}
+        />
+      </LogProvider>
     </LanguageProvider>
   );
 }

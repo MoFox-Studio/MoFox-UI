@@ -1,85 +1,51 @@
-// 导入React的核心库和钩子
 import { useState, useEffect, useRef } from 'react';
-// 导入framer-motion库，用于实现动画效果
 import { motion, AnimatePresence } from 'framer-motion';
-// 从lucide-react库导入图标组件
-import { Terminal, Pause, Play, Trash2 } from 'lucide-react';
-// 导入自定义的Button组件
+import { Terminal, Pause, Play, Trash2, WifiOff } from 'lucide-react';
 import { Button } from './ui/button';
-// 导入语言上下文钩子，用于国际化
 import { useLanguage } from '../i18n/LanguageContext';
+import { useLogs, LogLevel } from '@/logs/LogContext';
 
-// 定义日志级别的类型
-type LogLevel = 'INFO' | 'WARN' | 'ERROR' | 'SUCCESS';
-
-// 定义日志条目的接口
-interface LogEntry {
-  id: string;
-  timestamp: string;
-  level: LogLevel;
-  message: string;
-}
-
-// 获取模拟日志数据的函数
-const getMockLogs = (language: 'zh' | 'en'): LogEntry[] => language === 'zh' ? [
-  { id: '1', timestamp: '14:23:15', level: 'INFO', message: '机器人服务已启动' },
-  { id: '2', timestamp: '14:23:16', level: 'SUCCESS', message: '数据库连接成功' },
-  { id: '3', timestamp: '14:23:18', level: 'SUCCESS', message: 'AI 模型初始化完成' },
-] : [
-  { id: '1', timestamp: '14:23:15', level: 'INFO', message: 'Bot service started' },
-  { id: '2', timestamp: '14:23:16', level: 'SUCCESS', message: 'Database connected successfully' },
-  { id: '4', timestamp: '14:23:18', level: 'SUCCESS', message: 'AI model initialized' },
-];
-
-// 日志查看器组件
 export function LogViewer() {
   const { t, language } = useLanguage();
-  const [logs, setLogs] = useState<LogEntry[]>(() => getMockLogs(language));
-  const [isPaused, setIsPaused] = useState(false); // 是否暂停日志滚动
-  const logsEndRef = useRef<HTMLDivElement>(null); // 指向日志末尾的引用
+  const { logs, connectionStatus } = useLogs();
+  const [isPaused, setIsPaused] = useState(false);
+  const logsEndRef = useRef<HTMLDivElement>(null);
 
-  // 副作用钩子：模拟实时生成新日志
-  useEffect(() => {
-    if (!isPaused) {
-      const interval = setInterval(() => {
-        const newLog: LogEntry = {
-          id: Date.now().toString(),
-          timestamp: new Date().toLocaleTimeString('zh-CN', { hour12: false }),
-          level: ['INFO', 'WARN', 'ERROR', 'SUCCESS'][Math.floor(Math.random() * 4)] as LogLevel,
-          message: language === 'zh' ? '处理新消息请求' : 'Processing new message request',
-        };
-        setLogs((prev) => [...prev, newLog]);
-      }, 3000);
-      return () => clearInterval(interval);
-    }
-  }, [isPaused, language]);
-
-  // 副作用钩子：当日志更新时，自动滚动到底部
   useEffect(() => {
     if (!isPaused && logsEndRef.current) {
       logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [logs, isPaused]);
 
-  // 根据日志级别返回对应的颜色类
+
   const getLevelColor = (level: LogLevel) => {
     switch (level) {
       case 'WARN': return 'text-warning';
       case 'ERROR': return 'text-error';
       case 'SUCCESS': return 'text-success';
+      case 'DEBUG': return 'text-muted-foreground';
       default: return 'text-foreground';
     }
   };
 
-  // 清空所有日志
+  const getLevelBg = (level: LogLevel) => {
+    switch (level) {
+      case 'WARN': return 'bg-warning/20 border-warning/30';
+      case 'ERROR': return 'bg-error/20 border-error/30';
+      case 'SUCCESS': return 'bg-success/20 border-success/30';
+      case 'DEBUG': return 'bg-gray-500/20 border-gray-500/30';
+      default: return 'bg-primary/20 border-primary/30';
+    }
+  };
+
   const clearLogs = () => {
-    setLogs([]);
+    // This functionality should be handled by the LogProvider if needed
   };
 
   return (
     <div className="h-full flex flex-col p-8">
       <div className="max-w-7xl w-full mx-auto flex flex-col h-full">
-        {/* 页面标题 */}
+        {/* Header */}
         <motion.div 
           className="mb-6"
           initial={{ opacity: 0, y: -20 }}
@@ -87,20 +53,68 @@ export function LogViewer() {
           transition={{ duration: 0.5 }}
         >
           <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>{t.logs.title}</h1>
-          <p className="text-muted-foreground mt-2">{language === 'zh' ? '监控系统运行状态和事件' : 'Monitor system status and events'}</p>
+          <p className="text-muted-foreground mt-2">{language === 'zh' ? '实时监控系统运行状态和事件' : 'Monitor system status and events in real-time'}</p>
         </motion.div>
 
-        {/* 控制栏 */}
+        {/* Control Bar */}
         <motion.div 
           className="glass-card p-4 mb-4 flex items-center justify-between"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.5 }}
         >
-          {/* ... 控制栏UI ... */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+               <div className={`w-2 h-2 rounded-full ${
+                connectionStatus === 'connected' && !isPaused ? 'bg-success animate-pulse' :
+                connectionStatus === 'connected' && isPaused ? 'bg-warning' :
+                'bg-error'
+              }`} />
+              <span className="text-sm" style={{ fontWeight: 500 }}>
+                {connectionStatus === 'connected' ? (isPaused ? (language === 'zh' ? '已暂停' : 'Paused') : (language === 'zh' ? '实时' : 'Live')) :
+                 connectionStatus === 'connecting' ? (language === 'zh' ? '连接中...' : 'Connecting...') :
+                 (language === 'zh' ? '已断开' : 'Disconnected')}
+              </span>
+            </div>
+            <div className="h-4 w-px bg-border" />
+            <span className="text-sm text-muted-foreground">
+              {language === 'zh' ? `显示 ${logs.length} 条日志` : `Showing ${logs.length} logs`}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setIsPaused(!isPaused)}
+              variant="ghost"
+              size="sm"
+              className="glass-hover"
+              disabled={connectionStatus !== 'connected'}
+            >
+              {isPaused ? (
+                <>
+                  <Play className="w-4 h-4 mr-2" />
+                  {language === 'zh' ? '继续' : 'Resume'}
+                </>
+              ) : (
+                <>
+                  <Pause className="w-4 h-4 mr-2" />
+                  {language === 'zh' ? '暂停' : 'Pause'}
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={clearLogs}
+              variant="ghost"
+              size="sm"
+              className="glass-hover hover:text-error"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {t.logs.clearLogs}
+            </Button>
+          </div>
         </motion.div>
 
-        {/* 日志容器 */}
+        {/* Logs Container */}
         <motion.div 
           className="flex-1 glass-card p-6 overflow-hidden flex flex-col"
           initial={{ opacity: 0, y: 20 }}
@@ -121,11 +135,12 @@ export function LogViewer() {
                 >
                   <span className="text-muted-foreground shrink-0">{log.timestamp}</span>
                   <span
-                    className={`px-2 py-0.5 rounded border text-xs font-semibold ${getLevelColor(log.level)}`}
+                    className={`px-2 py-0.5 rounded border shrink-0 ${getLevelBg(log.level)} ${getLevelColor(log.level)}`}
+                    style={{ fontSize: '0.75rem', fontWeight: 600 }}
                   >
                     {log.level}
                   </span>
-                  <span className={getLevelColor(log.level)}>{log.message}</span>
+                  <span className={`whitespace-pre-wrap ${getLevelColor(log.level)}`}>{log.message}</span>
                 </motion.div>
               ))}
             </AnimatePresence>
