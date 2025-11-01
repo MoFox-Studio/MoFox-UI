@@ -29,33 +29,48 @@ app.add_middleware(
 # --- 动态查找配置文件路径 ---
 def find_config_paths():
     """
-    通过检查一系列可能的相对路径来动态查找配置文件。
-    这使得应用能够适应不同的目录结构。
-    返回一个包含有效路径的字典，如果找不到则返回None。
+    通过向上遍历目录结构来动态查找 Bot 配置文件。
+    这种方法能适应将 webui 和 bot 文件夹放在不同位置的多种项目布局。
     """
-    script_dir = os.path.dirname(__file__)
-    
-    # 定义两种可能的 "Bot" 目录相对于当前脚本的位置
-    # 1. MoFox-UI 和 Bot 都在 core 文件夹内 (../..)
-    # 2. MoFox-UI 和 Bot 是兄弟目录 (..)
-    possible_bot_roots = [
-        os.path.abspath(os.path.join(script_dir, "..", "..", "Bot")),
-        os.path.abspath(os.path.join(script_dir, "..", "Bot")),
-    ]
-    
-    for bot_root in possible_bot_roots:
-        config_dir = os.path.join(bot_root, "config")
-        bot_config_path = os.path.join(config_dir, "bot_config.toml")
-        
-        # 如果找到了 bot_config.toml，就认为这个路径是正确的
-        if os.path.exists(bot_config_path):
-            print(f"成功在以下位置找到配置文件目录: {config_dir}")
-            return {
-                "bot": bot_config_path,
-                "model": os.path.join(config_dir, "model_config.toml"),
-                "napcat": os.path.join(config_dir, "plugins", "napcat_adapter", "config.toml"),
-            }
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # 向上搜索最多5层，足以应对大多数合理的项目结构
+    for _ in range(5):
+        # 检查当前目录下是否存在 "Bot" 或 "MoFox-Bot"
+        for bot_folder_name in ["Bot", "MoFox-Bot"]:
+            bot_path_candidate = os.path.join(current_dir, bot_folder_name)
             
+            # 确定实际的 bot 根目录
+            # 如果是 "MoFox-Bot"，则实际的 Bot 目录在其内部
+            if bot_folder_name == "MoFox-Bot" and os.path.isdir(bot_path_candidate):
+                 bot_root = os.path.join(bot_path_candidate, "Bot")
+            # 如果是 "Bot" 目录
+            elif bot_folder_name == "Bot" and os.path.isdir(bot_path_candidate):
+                 bot_root = bot_path_candidate
+            else:
+                 continue
+
+            # 检查 bot_root 是否是一个有效的目录
+            if not os.path.isdir(bot_root):
+                continue
+
+            config_dir = os.path.join(bot_root, "config")
+            bot_config_path = os.path.join(config_dir, "bot_config.toml")
+
+            if os.path.exists(bot_config_path):
+                print(f"成功在以下位置找到配置文件目录: {config_dir}")
+                return {
+                    "bot": bot_config_path,
+                    "model": os.path.join(config_dir, "model_config.toml"),
+                    "napcat": os.path.join(config_dir, "plugins", "napcat_adapter", "config.toml"),
+                }
+        
+        # 如果在当前目录没找到，就向上一层
+        parent_dir = os.path.dirname(current_dir)
+        if parent_dir == current_dir:  # 如果到达文件系统根目录，则停止
+            break
+        current_dir = parent_dir
+        
     return None
 
 # 执行查找
