@@ -58,7 +58,7 @@
       },
       "scripts": {
             "dev": "vite",
-            "backend": "uvicorn python.main:app --host 127.0.0.1 --port 8001 --reload",
+            "backend": "uvicorn python.main:app --host 127.0.0.1 --port 8001",
             "build": "vite build",
             "start": "concurrently \"npm:backend\" \"wait-on http://127.0.0.1:8001 && npm:dev\""
       }
