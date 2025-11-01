@@ -29,66 +29,105 @@ app.add_middleware(
 # --- 动态查找配置文件路径 ---
 def find_config_paths():
     """
-    通过向上遍历目录结构来动态查找 Bot 配置文件。
-    这种方法能适应将 webui 和 bot 文件夹放在不同位置的多种项目布局。
+    通过向上遍历目录结构来动态查找 Bot 和 Napcat 配置文件。
+    它会向上搜索最多5个级别，以查找 'Bot'/'MoFox-Bot' 和 'Adapter' 文件夹。
     """
-    current_dir = os.path.dirname(os.path.abspath(__file__))
+    bot_path = None
+    model_path = None
+    napcat_path = None
 
-    # 向上搜索最多5层，足以应对大多数合理的项目结构
+    search_dir = os.path.dirname(os.path.abspath(__file__))
+
     for _ in range(5):
-        # 检查当前目录下是否存在 "Bot" 或 "MoFox-Bot"
-        for bot_folder_name in ["Bot", "MoFox-Bot"]:
-            bot_path_candidate = os.path.join(current_dir, bot_folder_name)
+        # 1. 查找 Bot/MoFox-Bot 目录
+        if not bot_path:
+            for bot_folder_name in ["Bot", "MoFox-Bot"]:
+                bot_candidate_dir = os.path.join(search_dir, bot_folder_name)
+                bot_root = None
+                
+                if bot_folder_name == "MoFox-Bot" and os.path.isdir(bot_candidate_dir):
+                    bot_root = os.path.join(bot_candidate_dir, "Bot")
+                elif bot_folder_name == "Bot" and os.path.isdir(bot_candidate_dir):
+                    bot_root = bot_candidate_dir
+                
+                if bot_root and os.path.isdir(bot_root):
+                    config_dir = os.path.join(bot_root, "config")
+                    bot_config_candidate = os.path.join(config_dir, "bot_config.toml")
+                    model_config_candidate = os.path.join(config_dir, "model_config.toml")
+                    
+                    if os.path.exists(bot_config_candidate):
+                        bot_path = bot_config_candidate
+                        print(f"成功找到 Bot 配置文件: {bot_path}")
+                        if os.path.exists(model_config_candidate):
+                            model_path = model_config_candidate
+                            print(f"成功找到 Model 配置文件: {model_path}")
+                        
+                        if not napcat_path:
+                           standard_napcat_path = os.path.join(config_dir, "plugins", "napcat_adapter", "config.toml")
+                           if os.path.exists(standard_napcat_path):
+                               napcat_path = standard_napcat_path
+                               print(f"在 Bot 目录中找到 Napcat 配置文件: {napcat_path}")
+                        break
             
-            # 确定实际的 bot 根目录
-            # 如果是 "MoFox-Bot"，则实际的 Bot 目录在其内部
-            if bot_folder_name == "MoFox-Bot" and os.path.isdir(bot_path_candidate):
-                 bot_root = os.path.join(bot_path_candidate, "Bot")
-            # 如果是 "Bot" 目录
-            elif bot_folder_name == "Bot" and os.path.isdir(bot_path_candidate):
-                 bot_root = bot_path_candidate
-            else:
-                 continue
+        # 2. 查找 'Adapter' 目录 (作为备选的 Napcat 配置)
+        if not napcat_path:
+            # 结构: .../MoFox-Bot/Adapter/config/config.toml
+            potential_mofox_bot_dir = os.path.join(search_dir, "MoFox-Bot")
+            if os.path.isdir(potential_mofox_bot_dir):
+                adapter_dir = os.path.join(potential_mofox_bot_dir, "Adapter")
+                if os.path.isdir(adapter_dir):
+                    napcat_candidate = os.path.join(adapter_dir, "config", "config.toml")
+                    if os.path.exists(napcat_candidate):
+                        napcat_path = napcat_candidate
+                        print(f"成功找到 'Adapter' (Napcat) 配置文件: {napcat_path}")
 
-            # 检查 bot_root 是否是一个有效的目录
-            if not os.path.isdir(bot_root):
-                continue
-
-            config_dir = os.path.join(bot_root, "config")
-            bot_config_path = os.path.join(config_dir, "bot_config.toml")
-
-            if os.path.exists(bot_config_path):
-                print(f"成功在以下位置找到配置文件目录: {config_dir}")
-                return {
-                    "bot": bot_config_path,
-                    "model": os.path.join(config_dir, "model_config.toml"),
-                    "napcat": os.path.join(config_dir, "plugins", "napcat_adapter", "config.toml"),
-                }
-        
-        # 如果在当前目录没找到，就向上一层
-        parent_dir = os.path.dirname(current_dir)
-        if parent_dir == current_dir:  # 如果到达文件系统根目录，则停止
+        if bot_path and napcat_path:
             break
-        current_dir = parent_dir
-        
-    return None
 
-# 执行查找
-found_paths = find_config_paths()
+        parent_dir = os.path.dirname(search_dir)
+        if parent_dir == search_dir:
+            break
+        search_dir = parent_dir
 
-if not found_paths:
-    raise FileNotFoundError("错误: 无法在任何预设的目录结构中找到 'Bot/config' 文件夹。请检查项目结构是否正确。")
+    return { "bot": bot_path, "model": model_path, "napcat": napcat_path }
 
-# 分配路径
-BOT_CONFIG_PATH = found_paths["bot"]
-MODEL_CONFIG_PATH = found_paths["model"]
-NAPCAT_CONFIG_PATH = found_paths["napcat"]
+# --- 全局启动错误变量 ---
+STARTUP_ERROR = None
 
-# 检查所有文件是否都存在
-for name, path in found_paths.items():
-    if not os.path.exists(path):
-        # 这个错误理论上不应该发生，因为我们已经基于 bot_config.toml 的存在来确认路径
-        raise FileNotFoundError(f"错误: 找到了 'Bot' 目录，但无法找到 '{name}' 配置文件。预期位置: {path}")
+try:
+    # --- 路径分配 ---
+    found_paths = find_config_paths()
+
+    BOT_CONFIG_PATH = found_paths.get("bot")
+    MODEL_CONFIG_PATH = found_paths.get("model")
+    NAPCAT_CONFIG_PATH = found_paths.get("napcat")
+
+    # --- 路径验证 ---
+    if not BOT_CONFIG_PATH or not os.path.exists(BOT_CONFIG_PATH):
+        raise FileNotFoundError("错误: 'bot' 配置文件 (bot_config.toml) 未找到。请检查项目结构。")
+    if not MODEL_CONFIG_PATH or not os.path.exists(MODEL_CONFIG_PATH):
+        raise FileNotFoundError(f"错误: 'model' 配置文件 (model_config.toml) 未找到。预期位置应在与bot配置文件相同的目录中。")
+
+    if not NAPCAT_CONFIG_PATH:
+        print("警告: 未找到 'napcat' 适配器配置文件。相关功能将不可用。")
+
+except FileNotFoundError as e:
+    STARTUP_ERROR = str(e)
+    print(f"!!! 启动错误: {STARTUP_ERROR}")
+    # 将路径变量设置为 None 以防止后续操作出错
+    BOT_CONFIG_PATH, MODEL_CONFIG_PATH, NAPCAT_CONFIG_PATH, LOG_FILE_PATH = None, None, None, None
+
+# --- 应用状态 API ---
+@app.get("/api/status")
+def get_app_status():
+    """
+    检查并报告应用程序的启动状态。
+    如果启动时发生错误（例如，找不到配置文件），将返回错误信息。
+    """
+    if STARTUP_ERROR:
+        return {"status": "error", "message": STARTUP_ERROR}
+    return {"status": "ok", "message": "应用程序已成功启动"}
+
 
 def find_log_file():
     """动态查找主日志文件"""
@@ -107,8 +146,10 @@ LOG_FILE_PATH = find_log_file()
 def get_bot_config():
     """
     提供机器人主配置文件的内容。
-    通过 GET 请求访问此端点时，将读取并返回 bot_config.toml 的内容。
+    如果启动失败，则不执行任何操作。
     """
+    if STARTUP_ERROR:
+        return {} # 或者返回一个特定的错误响应
     with open(BOT_CONFIG_PATH, "r", encoding="utf-8") as f:
         return tomlkit.load(f)
 
@@ -116,8 +157,10 @@ def get_bot_config():
 async def update_bot_config(request: Request):
     """
     更新并保存机器人主配置文件。
-    接收来自前端的 POST 请求 (JSON 格式)，并将其写入 bot_config.toml。
+    如果启动失败，则不执行任何操作。
     """
+    if STARTUP_ERROR:
+        return {"status": "error", "message": STARTUP_ERROR}
     new_data = await request.json()
     with open(BOT_CONFIG_PATH, "r+", encoding="utf-8") as f:
         # 读取现有内容以保留注释和结构
@@ -145,8 +188,10 @@ async def update_bot_config(request: Request):
 def get_model_config():
     """
     提供模型配置文件的内容。
-    通过 GET 请求访问此端点时，将读取并返回 model_config.toml 的内容。
+    如果启动失败，则不执行任何操作。
     """
+    if STARTUP_ERROR:
+        return {}
     with open(MODEL_CONFIG_PATH, "r", encoding="utf-8") as f:
         return tomlkit.load(f)
 
@@ -154,8 +199,10 @@ def get_model_config():
 async def update_model_config(request: Request):
     """
     更新并保存模型配置文件。
-    接收来自前端的 POST 请求 (JSON 格式)，并将其写入 model_config.toml。
+    如果启动失败，则不执行任何操作。
     """
+    if STARTUP_ERROR:
+        return {"status": "error", "message": STARTUP_ERROR}
     new_data = await request.json()
     with open(MODEL_CONFIG_PATH, "r+", encoding="utf-8") as f:
         content = tomlkit.load(f)
@@ -177,8 +224,10 @@ async def update_model_config(request: Request):
 def get_napcat_config():
     """
     提供 Napcat 适配器配置文件的内容。
-    通过 GET 请求访问此端点时，将读取并返回 napcat 插件的 config.toml 内容。
+    如果未找到配置文件，则返回空字典。
     """
+    if not NAPCAT_CONFIG_PATH:
+        return {}
     with open(NAPCAT_CONFIG_PATH, "r", encoding="utf-8") as f:
         return tomlkit.load(f)
 
@@ -186,8 +235,10 @@ def get_napcat_config():
 async def update_napcat_config(request: Request):
     """
     更新并保存 Napcat 适配器配置文件。
-    接收来自前端的 POST 请求 (JSON 格式)，并将其写入 napcat 插件的 config.toml。
+    如果未找到配置文件，则返回错误。
     """
+    if not NAPCAT_CONFIG_PATH:
+        return {"status": "error", "message": "Napcat 配置文件路径未配置或未找到。"}
     new_data = await request.json()
     with open(NAPCAT_CONFIG_PATH, "r+", encoding="utf-8") as f:
         content = tomlkit.load(f)

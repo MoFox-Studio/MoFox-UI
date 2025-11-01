@@ -16,6 +16,8 @@ import { ConfigCenter } from './components/ConfigCenter';
 import { LogViewer } from './components/LogViewer';
 // 导入主题定制器组件
 import { ThemeCustomizer } from './components/ThemeCustomizer';
+// 导入新创建的启动错误对话框
+import { StartupErrorDialog } from './components/StartupErrorDialog';
 // 导入语言提供者，用于国际化
 import { LanguageProvider } from './i18n/LanguageContext';
 import { LogProvider } from './logs/LogContext';
@@ -45,6 +47,8 @@ export default function App() {
     const saved = localStorage.getItem('mofox-theme');
     return saved ? JSON.parse(saved) : null;
   });
+  // 状态：启动错误
+  const [startupError, setStartupError] = useState<string | null>(null);
 
   // 处理登录成功事件
   const handleLogin = () => {
@@ -127,6 +131,23 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 副作用钩子：检查后端启动状态
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const response = await fetch('/api/status');
+        const data = await response.json();
+        if (data.status === 'error') {
+          setStartupError(data.message);
+        }
+      } catch (error) {
+        console.error("无法连接到后端:", error);
+        setStartupError("无法连接到后端服务。请确保后端正在运行，并且端口（默认为 8001）未被防火墙或杀毒软件阻止。");
+      }
+    };
+    checkStatus();
+  }, []);
+
   // 根据 currentView 状态渲染对应的视图组件
   const renderView = () => {
     const views = {
@@ -154,6 +175,10 @@ export default function App() {
   return (
     <LanguageProvider>
       <LogProvider>
+        <StartupErrorDialog
+          isOpen={!!startupError}
+          errorMessage={startupError || ''}
+        />
         <AppShell
           currentView={currentView}
           onViewChange={setCurrentView}

@@ -55,7 +55,8 @@
             "vite": "^7.1.12"
       },
       "scripts": {
-            "dev": "vite --open",
+            "dev": "vite",
+            "backend": "uvicorn python.main:app --host 127.0.0.1 --port 8001",
             "build": "vite build"
       }
 }
