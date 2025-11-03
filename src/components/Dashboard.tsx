@@ -259,6 +259,19 @@ export function Dashboard() {
     toast.info(language === 'zh' ? '跳转到日志查看器' : 'Jump to log viewer');
   };
 
+  // 生成64位base编码的随机token，包含大小写字母、数字和部分特殊字符（排除{}[]<)>(*/%#）
+  function generateToken(length = 64) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@^&_-+=';
+    let token = '';
+    for (let i = 0; i < length; i++) {
+      token += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return token;
+  }
+
+  // 启动时输出token到powershell窗口（控制台）
+  const startupToken = generateToken();
+  console.log('WebUI 启动 Token:', startupToken);
   // 处理启动主程序的操作
   const handleStartProgram = async () => {
     toast.loading(language === 'zh' ? '正在启动主程序...' : 'Starting main program...', { id: 'start' });
