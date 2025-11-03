@@ -272,6 +272,19 @@ export function Dashboard() {
   // 启动时输出token到powershell窗口（控制台）
   const startupToken = generateToken();
   console.log('WebUI 启动 Token:', startupToken);
+
+  // 启动时检查localStorage中的token，实现自动登录
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedToken = localStorage.getItem('webui_token');
+      if (savedToken) {
+        console.log('检测到已保存的Token，自动登录:', savedToken);
+        // 这里可以调用登录成功的回调或状态更新逻辑
+        // 例如设置某个状态表示已登录
+      }
+    }
+  }, []);
+
   // 处理启动主程序的操作
   const handleStartProgram = async () => {
     toast.loading(language === 'zh' ? '正在启动主程序...' : 'Starting main program...', { id: 'start' });

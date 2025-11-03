@@ -21,7 +21,13 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   // 使用语言上下文
   const { t, language, setLanguage } = useLanguage();
   // 状态：访问令牌
-  const [token, setToken] = useState('');
+  const [token, setToken] = useState(() => {
+    // 启动时尝试从localStorage读取token，实现记忆登录
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('webui_token') || '';
+    }
+    return '';
+  });
   // 状态：错误信息
   const [error, setError] = useState('');
   // 状态：当前聚焦的输入框
@@ -36,6 +42,10 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
     const processedToken = token.trim().toLowerCase();
     if (processedToken === 'mofox-admin-token' || processedToken === 'lycoris') {
       setIsLoggingIn(true);
+      // 保存token到localStorage，实现记忆登录
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('webui_token', token);
+      }
       // 模拟网络延迟
       setTimeout(() => {
         onLogin();
