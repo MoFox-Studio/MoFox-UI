@@ -30,7 +30,7 @@ const dailyQuotes = [
   { text: "完美不是没有可添加的，而是没有可删除的", author: "安托万·德·圣埃克苏佩里", en: "Perfection is achieved not when there is nothing more to add, but when there is nothing left to take away." },
   { text: "数据是新的石油", author: "克莱夫·洪比", en: "Data is the new oil." },
   { text: "在混乱中寻找秩序", author: "佚名", en: "Find order in chaos." },
-  
+
   // 成长类
   { text: "路是走出来的，不是等出来的", author: "李大钊", en: "The road is made by walking, not by waiting." },
   { text: "成长就是不断发现自己以前是个傻子的过程", author: "鲁迅", en: "Growth is the process of constantly discovering that you were a fool before." },
@@ -72,7 +72,7 @@ const dailyQuotes = [
   { text: "别让别人的评价，定义你的人生", author: "巴菲特", en: "Don't let others' opinions define your life." },
   { text: "真正的强大，是能接纳自己的脆弱", author: "荣格", en: "True strength is accepting your own vulnerability." },
   { text: "你现在偷的懒，都会变成未来的坑", author: "佚名", en: "The laziness you indulge now becomes tomorrow's pit." },
-  
+
   // 心态类
   { text: "心态对了，一切就都对了", author: "佚名", en: "When your mindset is right, everything falls into place." },
   { text: "乐观的人，总能在黑暗中找到光", author: "丘吉尔", en: "Optimists always find light in the darkness." },
@@ -114,7 +114,7 @@ const dailyQuotes = [
   { text: "别让坏脾气，毁掉你的好人缘", author: "佚名", en: "Don't let a bad temper ruin good relationships." },
   { text: "接纳自己的不完美，才能遇见更好的自己", author: "卡尔·罗杰斯", en: "Accept your imperfections to meet a better you." },
   { text: "心态对了，困难也会变成垫脚石", author: "佚名", en: "With the right mindset, difficulties become stepping stones." },
-  
+
   // 行动类
   { text: "行动是治愈恐惧的良药", author: "马克·吐温", en: "Action is the antidote to fear." },
   { text: "想做的事就立刻去做，别等'有空'", author: "佚名", en: "Do what you want now, don't wait for 'someday'." },
@@ -156,7 +156,7 @@ const dailyQuotes = [
   { text: "行动起来，才能让人生更有掌控感", author: "佚名", en: "Take action to gain more control over your life." },
   { text: "别拖延到明天，今天能做的事就今天做", author: "富兰克林", en: "Don't put off till tomorrow what you can do today." },
   { text: "行动，是实现一切可能的前提", author: "佚名", en: "Action is the prerequisite for all possibilities." },
-  
+
   // 生活类
   { text: "生活最好的状态，是既有烟火气，又有小诗意", author: "佚名", en: "Life's best state is having both fireworks and poetry." },
   { text: "日子是过出来的，不是想出来的", author: "林清玄", en: "Days are lived, not imagined." },
@@ -178,7 +178,7 @@ const dailyQuotes = [
   { text: "别让生活的琐碎，磨灭你对生活的热情", author: "佚名", en: "Don't let trivialities wear down your enthusiasm for life." },
   { text: "生活的幸福，在于珍惜眼前拥有的一切", author: "佚名", en: "Life's happiness is cherishing what you have now." },
   { text: "用心过好每一天，就是对生活最好的尊重", author: "佚名", en: "Living each day well is the best respect for life." },
-  
+
   // 人际关系类
   { text: "真心换真心，你对别人好，别人才会对你好", author: "佚名", en: "Sincerity for sincerity, treat others well to be treated well." },
   { text: "朋友不在多，真心就好", author: "佚名", en: "Friends don't need to be many, just sincere." },
@@ -201,7 +201,7 @@ const dailyQuotes = [
   { text: "与人相处，多一点感恩，少一点抱怨", author: "佚名", en: "More gratitude, less complaining in relationships." },
   { text: "好的朋友，会和你一起成长，一起变得更好", author: "佚名", en: "Good friends grow together and become better together." },
 ];
-
+  
 // 仪表盘主组件
 export function Dashboard() {
   // 使用语言上下文和日志上下文
@@ -214,6 +214,8 @@ export function Dashboard() {
     return dailyQuotes[Math.floor(Math.random() * dailyQuotes.length)];
   });
 
+  // 状态：记忆数量
+  const [memoryCount, setMemoryCount] = useState<number | null>(null);
 
   // 副作用钩子：每秒更新运行时长
   useEffect(() => {
@@ -221,6 +223,24 @@ export function Dashboard() {
       setUptime((prev) => prev + 1);
     }, 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  // 副作用钩子：获取记忆数据
+  useEffect(() => {
+    async function fetchMemory() {
+      try {
+        const response = await fetch('/api/memory');
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        setMemoryCount(data.count);
+      } catch (error) {
+        setMemoryCount(null);
+        console.error('Failed to fetch memory data:', error);
+      }
+    }
+    fetchMemory();
   }, []);
 
   // 格式化运行时长显示
@@ -233,12 +253,6 @@ export function Dashboard() {
     }
     return `${hours}h ${minutes}m ${secs}s`;
   };
-
-  // 处理重启服务的操作
-  // 该函数已在上方定义，避免重复声明
-
-  // 处理清空缓存的操作
-  // 该函数已在上方定义，避免重复声明
 
   // 处理查看日志的操作
   const handleViewLogs = () => {
@@ -288,7 +302,6 @@ export function Dashboard() {
     const newQuote = dailyQuotes[Math.floor(Math.random() * dailyQuotes.length)];
     setDailyQuote(newQuote);
   };
-
 
   // 容器动画变体
   const containerVariants = {
@@ -415,6 +428,17 @@ export function Dashboard() {
             </div>
           </motion.div>
 
+          {/* 新增记忆数据卡片 */}
+          <motion.div className="glass-card p-6 space-y-4" variants={itemVariants}>
+            <div className="flex items-center justify-between">
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>{language === 'zh' ? '记忆数据' : 'Memory Data'}</h3>
+              <MessageSquare className="w-5 h-5 text-primary" />
+            </div>
+            <div className="text-center text-lg font-semibold">
+              {memoryCount === null ? (language === 'zh' ? '加载中...' : 'Loading...') : memoryCount}
+            </div>
+          </motion.div>
+
           {/* 快速操作卡片 */}
           <motion.div className="glass-card p-6 space-y-4" variants={itemVariants}>
             <div className="flex items-center justify-between">
@@ -463,79 +487,7 @@ export function Dashboard() {
                   <span>{language === 'zh' ? '查看完整日志' : 'View Full Logs'}</span>
                 </Button>
               </div>
-
-            {/* 每日引言 */}
-            <div className="pt-3 mt-3 border-t border-border relative">
-              <div className="absolute -top-6 -right-6 w-48 h-48 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-full blur-[80px] pointer-events-none" />
-              
-              <div className="relative flex items-start justify-between gap-2 mb-2">
-                <div className="flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-primary" />
-                  <h4 style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t.dashboard.dailyQuote}</h4>
-                </div>
-                
-                <Button
-                  onClick={refreshQuote}
-                  variant="ghost"
-                  size="icon"
-                  className="glass-hover hover:border-primary/50 hover:text-primary shrink-0 h-7 w-7"
-                  title={t.dashboard.refresh}
-                >
-                  <RefreshCw className="w-3 h-3" />
-                </Button>
-              </div>
-              
-              <motion.div
-                key={dailyQuote.text}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="relative"
-              >
-                <p className="text-foreground mb-1" style={{ fontSize: '0.875rem', fontWeight: 500, lineHeight: 1.4 }}>
-                  {dailyQuote.text}
-                </p>
-                <p className="text-muted-foreground mb-1.5" style={{ fontSize: '0.75rem', fontStyle: 'italic', lineHeight: 1.3 }}>
-                  {dailyQuote.en}
-                </p>
-                <p className="text-primary" style={{ fontSize: '0.75rem', fontWeight: 500 }}>
-                  — {dailyQuote.author}
-                </p>
-              </motion.div>
-            </div>
-          </motion.div>
-
-          {/* 最近活动卡片 */}
-          <motion.div className="glass-card p-6 space-y-4" variants={itemVariants}>
-            <div className="flex items-center justify-between">
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>{t.dashboard.recentLogs}</h3>
-              <Activity className="w-5 h-5 text-primary" />
-            </div>
-
-            <div className="space-y-3 max-h-[300px] overflow-auto">
-              {logs.slice(-10).reverse().map((log, index) => (
-                <motion.div
-                  key={log.id}
-                  className="flex gap-3 p-3 glass rounded-[var(--radius)] hover:border-primary/30 transition-all"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.08, duration: 0.3 }}
-                  whileHover={{ x: 2, transition: { duration: 0.15 } }}
-                >
-                  <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
-                    log.level === 'SUCCESS' ? 'bg-success' :
-                    log.level === 'WARN' ? 'bg-warning' :
-                    log.level === 'ERROR' ? 'bg-error' :
-                    'bg-primary'
-                  }`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate" title={log.message}>{log.message}</p>
-                    <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{log.timestamp}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+            </motion.div>
         </motion.div>
       </div>
     </div>

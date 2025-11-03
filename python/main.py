@@ -1,5 +1,5 @@
 # 导入 FastAPI 和相关模块
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import tomlkit
@@ -9,6 +9,7 @@ import socket
 import errno
 from typing import List
 from pydantic import BaseModel
+import sqlite3
 
 # --- FastAPI 应用实例 ---
 app = FastAPI()
@@ -53,7 +54,7 @@ def find_config_paths():
                     bot_root = potential_path
                     if name == "MoFox-Bot":
                          # 实际的 Bot 目录在 "MoFox-Bot" 内部
-                         bot_root = os.path.join(potential_path, "Bot")
+                        bot_root = os.path.join(potential_path, "Bot")
 
                     if os.path.isdir(bot_root):
                         config_dir = os.path.join(bot_root, "config")
@@ -117,10 +118,10 @@ try:
 
     if not BOT_CONFIG_PATH or not os.path.exists(BOT_CONFIG_PATH):
         raise FileNotFoundError("错误: 'bot_config.toml' 未找到。请确认 'MoFox-UI' 与 'Bot'/'MoFox-Bot' 文件夹在同一目录下。")
-    
+
     if not MODEL_CONFIG_PATH or not os.path.exists(MODEL_CONFIG_PATH):
         print(f"警告: 'model_config.toml' 未找到。")
-    
+
     if not NAPCAT_CONFIG_PATH:
         print("警告: 未找到 'napcat' 适配器配置文件。")
 
@@ -136,8 +137,34 @@ except Exception as e:
     STARTUP_ERROR = str(e)
     print(f"!!! 启动错误: {STARTUP_ERROR}")
 
-# --- API Endpoints ---
+# --- 数据库连接和记忆数据读取 ---
+DATABASE_PATH = r"F:\MoFox_Bot\data\MaiBot.db"
 
+def get_db_connection():
+    try:
+        conn = sqlite3.connect(DATABASE_PATH)
+        conn.row_factory = sqlite3.Row
+        return conn
+    except Exception as e:
+        print(f"数据库连接失败: {e}")
+        return None
+
+@app.get("/api/memory")
+def read_memory():
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="无法连接数据库")
+    try:
+        cursor = conn.execute("SELECT * FROM memory_table LIMIT 10")  # 假设表名为memory_table
+        rows = cursor.fetchall()
+        result = [dict(row) for row in rows]
+        return {"success": True, "data": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"查询数据库失败: {e}")
+    finally:
+        conn.close()
+
+# --- API Endpoints ---
 @app.get("/api/status")
 def get_app_status():
     if STARTUP_ERROR:
