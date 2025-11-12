@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 // 导入framer-motion库，用于实现动画效果
 import { motion } from 'framer-motion';
 // 从lucide-react库导入图标组件
-import { LayoutDashboard, Settings, Terminal, Palette, LogOut, Sun, Moon, Languages } from 'lucide-react';
+import { LayoutDashboard, Settings, Terminal, Palette, LogOut, Sun, Moon, Languages, Package } from 'lucide-react';
 // 导入自定义的Button组件
 import { Button } from './ui/button';
 // 导入语言上下文钩子，用于国际化
@@ -28,6 +28,7 @@ export function AppShell({ children, currentView, onViewChange, onLogout, isDark
   const navItems = [
     { id: 'dashboard', label: t.nav.dashboard, icon: LayoutDashboard },
     { id: 'config', label: t.nav.config, icon: Settings },
+    { id: 'plugins', label: language === 'zh' ? '插件市场' : 'Plugins', icon: Package },
     { id: 'logs', label: t.nav.logs, icon: Terminal },
     { id: 'theme', label: t.nav.theme, icon: Palette },
   ];

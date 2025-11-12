@@ -18,6 +18,8 @@ import { LogViewer } from './components/LogViewer';
 import { ThemeCustomizer } from './components/ThemeCustomizer';
 // 导入新创建的启动错误对话框
 import { StartupErrorDialog } from './components/StartupErrorDialog';
+// 导入插件市场组件
+import { PluginMarket } from './components/PluginMarket';
 // 导入语言提供者，用于国际化
 import { LanguageProvider } from './i18n/LanguageContext';
 import { LogProvider } from './logs/LogContext';
@@ -135,6 +137,18 @@ export default function App() {
   // 副作用钩子：检查后端启动状态和备用端口
   useEffect(() => {
     const checkBackend = async () => {
+      // 检查是否为 Demo 模式
+      const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
+      
+      if (isDemoMode) {
+        console.log('Running in DEMO mode - backend checks skipped');
+        toast.info('演示模式', {
+          description: '当前运行在演示模式下，无需后端服务',
+          duration: 5000,
+        });
+        return;
+      }
+
       // 1. 检查后端主要状态
       try {
         const statusResponse = await fetch('/api/status');
@@ -193,6 +207,7 @@ export default function App() {
       config: <ConfigCenter key="config" />,
       logs: <LogViewer key="logs" />,
       theme: <ThemeCustomizer key="theme" currentTheme={currentTheme} onApplyTheme={applyTheme} />,
+      plugins: <PluginMarket key="plugins" />,
     };
     
     return views[currentView as keyof typeof views] || views.dashboard;
