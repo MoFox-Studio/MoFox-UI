@@ -1,33 +1,6 @@
-# Rust target directory
-/target/
-
-# Debug files
-*.pdb
-
-# IDE files
-.vscode/
-.idea/
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Temporary files
-*.tmp
-*.temp
-
-# Lock files for development dependencies (optional)
-# Cargo.lock
-
-# Local configuration
-*.local
+node_modules
+dist
+build
 .env
-
-# Log files
-*.log
-logs/
+.env.local
+.env.*.local
