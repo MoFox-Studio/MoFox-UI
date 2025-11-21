@@ -7,22 +7,33 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { useLanguage } from '../../i18n/LanguageContext';
 
-export function SecurityModulesCard() {
+export function SecurityModulesCard({ config, onChange }: { config: any, onChange: (config: any) => void }) {
   const { t, language } = useLanguage();
-  const [antiInjectionEnabled, setAntiInjectionEnabled] = useState(true);
-  const [autoBanEnabled, setAutoBanEnabled] = useState(true);
-  const [blacklist, setBlacklist] = useState<string[]>(['user_spam_001', 'bot_attacker_02']);
+
+  const handleUpdate = (path: string, value: any) => {
+    const keys = path.split('.');
+    const newConfig = JSON.parse(JSON.stringify(config));
+    let current = newConfig;
+    for (let i = 0; i < keys.length - 1; i++) {
+      current = current[keys[i]] = current[keys[i]] || {};
+    }
+    current[keys[keys.length - 1]] = value;
+    onChange(newConfig);
+  };
+
   const [blacklistInput, setBlacklistInput] = useState('');
 
   const addToBlacklist = () => {
-    if (blacklistInput.trim() && !blacklist.includes(blacklistInput.trim())) {
-      setBlacklist([...blacklist, blacklistInput.trim()]);
+    const currentBlacklist = config.security?.blacklist || [];
+    if (blacklistInput.trim() && !currentBlacklist.includes(blacklistInput.trim())) {
+      handleUpdate('security.blacklist', [...currentBlacklist, blacklistInput.trim()]);
       setBlacklistInput('');
     }
   };
 
   const removeFromBlacklist = (item: string) => {
-    setBlacklist(blacklist.filter(b => b !== item));
+    const currentBlacklist = config.security?.blacklist || [];
+    handleUpdate('security.blacklist', currentBlacklist.filter((b: string) => b !== item));
   };
 
   return (
@@ -40,7 +51,10 @@ export function SecurityModulesCard() {
               {language === 'zh' ? '防止 Prompt 注入和越狱' : 'Prevent prompt injection and jailbreak'}
             </p>
           </div>
-          <Switch checked={antiInjectionEnabled} onCheckedChange={setAntiInjectionEnabled} />
+          <Switch
+            checked={config.security?.anti_injection_enabled || false}
+            onCheckedChange={(checked) => handleUpdate('security.anti_injection_enabled', checked)}
+          />
         </div>
 
         <div className="flex items-center justify-between p-4 glass rounded-[var(--radius)]">
@@ -50,7 +64,10 @@ export function SecurityModulesCard() {
               {language === 'zh' ? '限制用户请求频率' : 'Limit user request frequency'}
             </p>
           </div>
-          <Switch defaultChecked />
+          <Switch
+            checked={config.security?.enable_rate_limit || false}
+            onCheckedChange={(checked) => handleUpdate('security.enable_rate_limit', checked)}
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -58,6 +75,8 @@ export function SecurityModulesCard() {
             <Label>{t.config.security.maxRequestsPerMin}</Label>
             <Input
               type="number"
+              value={config.security?.max_requests_per_min || ''}
+              onChange={(e) => handleUpdate('security.max_requests_per_min', parseInt(e.target.value) || 0)}
               placeholder="10"
               className="glass border-border focus:border-primary transition-all"
             />
@@ -67,6 +86,8 @@ export function SecurityModulesCard() {
             <Label>{language === 'zh' ? '超限惩罚时间（分钟）' : 'Penalty Time (min)'}</Label>
             <Input
               type="number"
+              value={config.security?.penalty_time_min || ''}
+              onChange={(e) => handleUpdate('security.penalty_time_min', parseInt(e.target.value) || 0)}
               placeholder="5"
               className="glass border-border focus:border-primary transition-all"
             />
@@ -80,7 +101,10 @@ export function SecurityModulesCard() {
               {language === 'zh' ? '过滤敏感和不当内容' : 'Filter sensitive and inappropriate content'}
             </p>
           </div>
-          <Switch defaultChecked />
+          <Switch
+            checked={config.security?.enable_content_filter || false}
+            onCheckedChange={(checked) => handleUpdate('security.enable_content_filter', checked)}
+          />
         </div>
 
         <div className="flex items-center justify-between p-4 glass rounded-[var(--radius)]">
@@ -90,14 +114,19 @@ export function SecurityModulesCard() {
               {language === 'zh' ? '自动封禁恶意用户' : 'Automatically ban malicious users'}
             </p>
           </div>
-          <Switch checked={autoBanEnabled} onCheckedChange={setAutoBanEnabled} />
+          <Switch
+            checked={config.security?.auto_ban_enabled || false}
+            onCheckedChange={(checked) => handleUpdate('security.auto_ban_enabled', checked)}
+          />
         </div>
 
-        {autoBanEnabled && (
+        {config.security?.auto_ban_enabled && (
           <div className="space-y-2">
             <Label>{language === 'zh' ? '封禁阈值（违规次数）' : 'Ban Threshold (Violations)'}</Label>
             <Input
               type="number"
+              value={config.security?.ban_threshold_violations || ''}
+              onChange={(e) => handleUpdate('security.ban_threshold_violations', parseInt(e.target.value) || 0)}
               placeholder="3"
               className="glass border-border focus:border-primary transition-all"
             />
@@ -114,13 +143,16 @@ export function SecurityModulesCard() {
               {language === 'zh' ? '检测并阻止垃圾消息' : 'Detect and block spam messages'}
             </p>
           </div>
-          <Switch defaultChecked />
+          <Switch
+            checked={config.security?.enable_anti_spam || false}
+            onCheckedChange={(checked) => handleUpdate('security.enable_anti_spam', checked)}
+          />
         </div>
 
         <div className="space-y-3">
           <Label>{t.config.security.blacklist}</Label>
           <div className="flex flex-wrap gap-2 p-3 glass rounded-[var(--radius)] min-h-[60px]">
-            {blacklist.map((item) => (
+            {(config.security?.blacklist || []).map((item: string) => (
               <Badge
                 key={item}
                 variant="secondary"

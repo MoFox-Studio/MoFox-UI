@@ -11,12 +11,19 @@ import { Slider } from '../ui/slider';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 // 关系与记忆系统配置卡片组件
-export function RelationshipMemoryCard() {
+export function RelationshipMemoryCard({ config, onChange }: { config: any, onChange: (config: any) => void }) {
   const { t, language } = useLanguage();
-  // 状态管理
-  const [enableRelationship, setEnableRelationship] = useState(true);
-  const [enableMemory, setEnableMemory] = useState(true);
-  const [memoryStrength, setMemoryStrength] = useState([70]);
+
+  const handleUpdate = (path: string, value: any) => {
+    const keys = path.split('.');
+    const newConfig = JSON.parse(JSON.stringify(config));
+    let current = newConfig;
+    for (let i = 0; i < keys.length - 1; i++) {
+      current = current[keys[i]] = current[keys[i]] || {};
+    }
+    current[keys[keys.length - 1]] = value;
+    onChange(newConfig);
+  };
 
   return (
     <div className="glass-card p-6 space-y-6">
@@ -35,17 +42,22 @@ export function RelationshipMemoryCard() {
               {language === 'zh' ? '记住用户的对话历史' : 'Remember user conversation history'}
             </p>
           </div>
-          <Switch checked={enableMemory} onCheckedChange={setEnableMemory} />
+          <Switch
+            checked={config.memory?.enable_memory || false}
+            onCheckedChange={(checked) => handleUpdate('memory.enable_memory', checked)}
+          />
         </div>
 
         {/* 仅在启用记忆系统时显示 */}
-        {enableMemory && (
+        {config.memory?.enable_memory && (
           <>
             {/* 记忆保留天数 */}
             <div className="space-y-2">
               <Label>{t.config.memory.memoryDays}</Label>
               <Input
                 type="number"
+                value={config.memory?.memory_days || ''}
+                onChange={(e) => handleUpdate('memory.memory_days', parseInt(e.target.value) || 0)}
                 placeholder="30"
                 className="glass border-border focus:border-primary transition-all"
               />
@@ -58,8 +70,8 @@ export function RelationshipMemoryCard() {
             <div className="space-y-3 p-4 glass rounded-[var(--radius)]">
               <Label>{language === 'zh' ? '记忆强度' : 'Memory Strength'}</Label>
               <Slider
-                value={memoryStrength}
-                onValueChange={setMemoryStrength}
+                value={[config.memory?.memory_strength || 0]}
+                onValueChange={(value) => handleUpdate('memory.memory_strength', value[0])}
                 min={0}
                 max={100}
                 step={1}
@@ -67,7 +79,7 @@ export function RelationshipMemoryCard() {
               />
               <div className="flex justify-between text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                 <span>{language === 'zh' ? '遗忘快' : 'Forget Fast'}</span>
-                <span>{memoryStrength[0]}%</span>
+                <span>{config.memory?.memory_strength || 0}%</span>
                 <span>{language === 'zh' ? '记忆深' : 'Remember Well'}</span>
               </div>
             </div>
@@ -82,7 +94,10 @@ export function RelationshipMemoryCard() {
               {language === 'zh' ? '追踪与用户的亲密度' : 'Track intimacy with users'}
             </p>
           </div>
-          <Switch checked={enableRelationship} onCheckedChange={setEnableRelationship} />
+          <Switch
+            checked={config.memory?.enable_relationship || false}
+            onCheckedChange={(checked) => handleUpdate('memory.enable_relationship', checked)}
+          />
         </div>
 
         {/* 情感分析 */}
@@ -91,7 +106,10 @@ export function RelationshipMemoryCard() {
             <Brain className="w-4 h-4 text-secondary" />
             <Label>{t.config.memory.emotionalAnalysis}</Label>
           </div>
-          <Switch defaultChecked />
+          <Switch
+            checked={config.memory?.emotional_analysis || false}
+            onCheckedChange={(checked) => handleUpdate('memory.emotional_analysis', checked)}
+          />
         </div>
 
         {/* 话题追踪 */}
@@ -102,7 +120,10 @@ export function RelationshipMemoryCard() {
               {language === 'zh' ? '记录用户感兴趣的话题' : 'Track topics users are interested in'}
             </p>
           </div>
-          <Switch defaultChecked />
+          <Switch
+            checked={config.memory?.topic_tracking || false}
+            onCheckedChange={(checked) => handleUpdate('memory.topic_tracking', checked)}
+          />
         </div>
 
         {/* 记忆向量维度 */}
@@ -110,6 +131,8 @@ export function RelationshipMemoryCard() {
           <Label>{language === 'zh' ? '记忆向量维度' : 'Memory Vector Dimension'}</Label>
           <Input
             type="number"
+            value={config.memory?.vector_dimension || ''}
+            onChange={(e) => handleUpdate('memory.vector_dimension', parseInt(e.target.value) || 0)}
             placeholder="1536"
             className="glass border-border focus:border-primary transition-all"
           />

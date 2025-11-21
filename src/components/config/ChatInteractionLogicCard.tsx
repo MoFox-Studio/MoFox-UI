@@ -10,11 +10,19 @@ import { Switch } from '../ui/switch';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 // 聊天交互逻辑配置卡片组件
-export function ChatInteractionLogicCard() {
+export function ChatInteractionLogicCard({ config, onChange }: { config: any, onChange: (config: any) => void }) {
   const { t, language } = useLanguage();
-  // 状态管理
-  const [allowReplySelf, setAllowReplySelf] = useState(false);
-  const [interruptionEnabled, setInterruptionEnabled] = useState(true);
+
+  const handleUpdate = (path: string, value: any) => {
+    const keys = path.split('.');
+    const newConfig = JSON.parse(JSON.stringify(config));
+    let current = newConfig;
+    for (let i = 0; i < keys.length - 1; i++) {
+      current = current[keys[i]] = current[keys[i]] || {};
+    }
+    current[keys[keys.length - 1]] = value;
+    onChange(newConfig);
+  };
 
   return (
     <div className="glass-card p-6 space-y-6">
@@ -32,6 +40,8 @@ export function ChatInteractionLogicCard() {
             <Label>{t.config.chat.replyDelay}</Label>
             <Input
               type="number"
+              value={config.chat?.reply_delay || ''}
+              onChange={(e) => handleUpdate('chat.reply_delay', parseFloat(e.target.value) || 0)}
               placeholder="1.5"
               step="0.1"
               className="glass border-border focus:border-primary transition-all"
@@ -46,6 +56,8 @@ export function ChatInteractionLogicCard() {
             <Label>{t.config.chat.contextWindow}</Label>
             <Input
               type="number"
+              value={config.chat?.context_window || ''}
+              onChange={(e) => handleUpdate('chat.context_window', parseInt(e.target.value) || 0)}
               placeholder="10"
               className="glass border-border focus:border-primary transition-all"
             />
@@ -64,7 +76,10 @@ export function ChatInteractionLogicCard() {
               {language === 'zh' ? '机器人可以回复自己的消息' : 'Bot can reply to its own messages'}
             </p>
           </div>
-          <Switch checked={allowReplySelf} onCheckedChange={setAllowReplySelf} />
+          <Switch
+            checked={config.chat?.allow_reply_self || false}
+            onCheckedChange={(checked) => handleUpdate('chat.allow_reply_self', checked)}
+          />
         </div>
 
         {/* 仅回复@ */}
@@ -75,7 +90,10 @@ export function ChatInteractionLogicCard() {
               {language === 'zh' ? '仅回复@机器人的消息' : 'Only reply to @mentions'}
             </p>
           </div>
-          <Switch defaultChecked />
+          <Switch
+            checked={config.chat?.enable_mentions || false}
+            onCheckedChange={(checked) => handleUpdate('chat.enable_mentions', checked)}
+          />
         </div>
 
         {/* 智能打断 */}
@@ -86,7 +104,10 @@ export function ChatInteractionLogicCard() {
               {language === 'zh' ? '在生成回复时收到新消息时中断' : 'Interrupt when new message arrives'}
             </p>
           </div>
-          <Switch checked={interruptionEnabled} onCheckedChange={setInterruptionEnabled} />
+          <Switch
+            checked={config.chat?.smart_interruption || false}
+            onCheckedChange={(checked) => handleUpdate('chat.smart_interruption', checked)}
+          />
         </div>
         
         {/* ... 其他开关选项 ... */}
