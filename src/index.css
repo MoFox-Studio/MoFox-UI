@@ -2587,9 +2587,11 @@
   }
 
   .aurora-bg {
-    background: radial-gradient(at 20% 30%, #00f5ff08 0%, #0000 50%) 0 0 / 200% 200%, radial-gradient(at 80% 70%, #7f00ff08 0%, #0000 50%) 0 0 / 200% 200%, linear-gradient(135deg, #0a0a15 0%, #0f0f1e 25%, #12121f 50%, #0d0d1a 75%, #0a0a15 100%) 0 0 / 400% 400%;
+    background: 
+      radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+      radial-gradient(circle at 80% 10%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+      var(--background);
     transition: background .8s cubic-bezier(.4, 0, .2, 1);
-    animation: 40s infinite aurora;
   }
 
   :root.light .aurora-bg {
@@ -2729,35 +2731,47 @@
 :root {
   --font-size: 16px;
   --font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --background: #0f0f1e;
-  --foreground: #fff;
-  --glass-bg: #ffffff08;
-  --glass-border: #ffffff2e;
-  --glass-highlight: #ffffff14;
-  --primary: #00f5ff;
-  --primary-glow: #00f5ff80;
-  --primary-rgb: 0, 245, 255;
-  --secondary: #7f00ff;
-  --secondary-glow: #7f00ff80;
-  --secondary-rgb: 127, 0, 255;
-  --success: #0f8;
-  --warning: #ffb800;
-  --error: #f36;
-  --card: #ffffff0d;
-  --card-foreground: #e8e8f0;
-  --border: #ffffff1a;
-  --input: #ffffff0d;
-  --input-border: #fff3;
+  
+  /* Premium Dark Mode (Zinc Palette) */
+  --background: #09090b;
+  --foreground: #fafafa;
+  
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.05);
+  
+  /* Refined Accents (Subtle Cyan & Violet) */
+  --primary: #06b6d4;
+  --primary-glow: rgba(6, 182, 212, 0.4);
+  --primary-rgb: 6, 182, 212;
+  
+  --secondary: #8b5cf6;
+  --secondary-glow: rgba(139, 92, 246, 0.4);
+  --secondary-rgb: 139, 92, 246;
+  
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  
+  --border: #27272a;
+  --input: #27272a;
+  --input-border: #3f3f46;
   --input-focus: var(--primary);
-  --muted: #ffffff4d;
-  --muted-foreground: #a0a0b0;
+  
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  
   --font-weight-medium: 500;
   --font-weight-normal: 400;
   --font-weight-light: 300;
   --font-weight-bold: 700;
-  --radius: 1rem;
-  --radius-sm: .5rem;
-  --radius-lg: 1.5rem;
+  
+  --radius: 0.75rem;
+  --radius-sm: 0.5rem;
+  --radius-lg: 1rem;
 }
 
 :root.light {
