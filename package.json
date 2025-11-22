@@ -1,8 +1,9 @@
 {
-      "name": "MoFox-UI",
+      "name": "mofox-ui",
       "version": "0.1.0",
       "private": true,
       "dependencies": {
+            "@monaco-editor/react": "^4.7.0",
             "@radix-ui/react-accordion": "^1.2.12",
             "@radix-ui/react-alert-dialog": "^1.1.15",
             "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -29,7 +30,8 @@
             "@radix-ui/react-toggle": "^1.1.10",
             "@radix-ui/react-toggle-group": "^1.1.11",
             "@radix-ui/react-tooltip": "^1.2.8",
-            "@types/express": "^5.0.5",
+            "@types/express": "^4.17.21",
+            "@types/sqlite3": "^3.1.11",
             "class-variance-authority": "^0.7.1",
             "clsx": "*",
             "cmdk": "^1.1.1",
@@ -38,6 +40,7 @@
             "framer-motion": "^12.23.24",
             "input-otp": "^1.4.2",
             "lucide-react": "^0.552.0",
+            "monaco-editor": "^0.55.1",
             "next-themes": "^0.4.6",
             "react": "^19.2.0",
             "react-day-picker": "^9.11.1",
@@ -63,9 +66,9 @@
       "scripts": {
             "dev": "vite",
             "demo": "vite --mode demo",
-            "backend": "uvicorn python.main:app --host 127.0.0.1 --port 8001",
+            "backend": "start_backend.bat",
             "build": "vite build",
             "build:demo": "vite build --mode demo",
-            "start": "concurrently \"npm:backend\" \"wait-on http://127.0.0.1:8001 && npm:dev\""
+            "start": "concurrently \"npm:backend\" \"start_frontend.bat\""
       }
 }

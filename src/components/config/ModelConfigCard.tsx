@@ -194,14 +194,15 @@ export function ModelConfigCard({ config, onChange }: { config: any, onChange: (
 
   const selectedProvider = apiProviders.find(p => p.id === selectedProviderId);
   const selectedModel = models.find(m => m.id === selectedModelId);
-
+ 
   return (
     <div className="glass-card p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <Cpu className="w-5 h-5 text-primary" />
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>模型配置</h3>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+            <Cpu className="w-5 h-5 text-primary" />
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>模型配置</h3>
+        </div>
       </div>
-
       {/* Master-Detail Layout */}
       <div className="grid grid-cols-3 gap-4 min-h-[400px]">
         {/* Left Panel - Lists */}

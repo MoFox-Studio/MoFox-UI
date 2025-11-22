@@ -12,22 +12,29 @@ from pydantic import BaseModel
 import sqlite3
 
 # --- FastAPI 应用实例 ---
+# 创建 FastAPI 应用实例，这是所有 API 的基础
 app = FastAPI()
 
 # --- 全局变量 ---
+# 启动时发生的错误，如果没有错误则为 None
 STARTUP_ERROR = None
+# 机器人主配置文件的路径
 BOT_CONFIG_PATH = None
+# 模型配置文件的路径
 MODEL_CONFIG_PATH = None
+# Napcat 适配器配置文件的路径
 NAPCAT_CONFIG_PATH = None
+# 日志文件的路径
 LOG_FILE_PATH = None
 
 # --- CORS 中间件 ---
+# 添加 CORS 中间件以允许跨域请求，这对于 Web UI 与后端 API 的交互至关重要
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["*"],  # 允许所有来源的请求
+    allow_credentials=True,  # 允许携带凭证 (cookies, authorization headers)
+    allow_methods=["*"],  # 允许所有 HTTP 方法 (GET, POST, etc.)
+    allow_headers=["*"],  # 允许所有请求头
 )
 
 # --- 核心: 配置文件查找逻辑 ---
@@ -44,7 +51,7 @@ def find_config_paths():
         # e.g., D:\Ksdeath\MoFox-Bot\
         start_search_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-        # 向上搜索最多5层
+        # 向上搜索最多5层，以避免无限循环或搜索不相关的目录
         for i in range(5):
             # 在当前搜索目录中查找 "Bot" 或 "MoFox-Bot"
             for name in ["Bot", "MoFox-Bot"]:
@@ -138,12 +145,17 @@ except Exception as e:
     print(f"!!! 启动错误: {STARTUP_ERROR}")
 
 # --- 数据库连接和记忆数据读取 ---
+# 数据库文件的硬编码路径，理想情况下应通过配置管理
 DATABASE_PATH = r"F:\MoFox_Bot\data\MaiBot.db"
 
 def get_db_connection():
+    """
+    创建并返回一个到 SQLite 数据库的连接。
+    如果连接失败，则打印错误并返回 None。
+    """
     try:
         conn = sqlite3.connect(DATABASE_PATH)
-        conn.row_factory = sqlite3.Row
+        conn.row_factory = sqlite3.Row  # 允许通过列名访问查询结果
         return conn
     except Exception as e:
         print(f"数据库连接失败: {e}")
@@ -151,6 +163,10 @@ def get_db_connection():
 
 @app.get("/api/memory")
 def read_memory():
+    """
+    从数据库中读取记忆数据。
+    这是一个示例端点，用于从数据库中获取数据。
+    """
     conn = get_db_connection()
     if not conn:
         raise HTTPException(status_code=500, detail="无法连接数据库")
@@ -167,14 +183,24 @@ def read_memory():
 # --- API Endpoints ---
 @app.get("/api/status")
 def get_app_status():
+    """
+    返回应用程序的启动状态。
+    如果启动时发生错误，将返回错误信息。
+    """
     if STARTUP_ERROR:
         return {"status": "error", "message": STARTUP_ERROR}
     return {"status": "ok", "message": "应用程序已成功启动"}
 
 class CheckPortsRequest(BaseModel):
+    """
+    定义检查端口请求的数据模型。
+    """
     ports: List[int]
 
 def is_port_in_use(port: int) -> bool:
+    """
+    检查指定端口是否已被占用。
+    """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
             s.bind(("127.0.0.1", port))
@@ -184,6 +210,9 @@ def is_port_in_use(port: int) -> bool:
 
 @app.post("/api/check-ports")
 async def check_ports(request: CheckPortsRequest):
+    """
+    检查请求中指定的端口列表是否被占用。
+    """
     results = []
     for port in request.ports:
         in_use = is_port_in_use(port)
@@ -192,12 +221,18 @@ async def check_ports(request: CheckPortsRequest):
 
 @app.get("/config/bot")
 def get_bot_config():
+    """
+    获取机器人主配置文件 (bot_config.toml) 的内容。
+    """
     if STARTUP_ERROR or not BOT_CONFIG_PATH: return {}
     with open(BOT_CONFIG_PATH, "r", encoding="utf-8") as f:
         return tomlkit.load(f)
 
 @app.post("/config/bot")
 async def update_bot_config(request: Request):
+    """
+    更新机器人主配置文件 (bot_config.toml)。
+    """
     if STARTUP_ERROR or not BOT_CONFIG_PATH: return {"status": "error", "message": STARTUP_ERROR or "Bot config path not found"}
     new_data = await request.json()
     with open(BOT_CONFIG_PATH, "r+", encoding="utf-8") as f:
@@ -214,12 +249,18 @@ async def update_bot_config(request: Request):
 
 @app.get("/config/model")
 def get_model_config():
+    """
+    获取模型配置文件 (model_config.toml) 的内容。
+    """
     if STARTUP_ERROR or not MODEL_CONFIG_PATH: return {}
     with open(MODEL_CONFIG_PATH, "r", encoding="utf-8") as f:
         return tomlkit.load(f)
 
 @app.post("/config/model")
 async def update_model_config(request: Request):
+    """
+    更新模型配置文件 (model_config.toml)。
+    """
     if STARTUP_ERROR or not MODEL_CONFIG_PATH: return {"status": "error", "message": STARTUP_ERROR or "Model config path not found"}
     new_data = await request.json()
     with open(MODEL_CONFIG_PATH, "r+", encoding="utf-8") as f:
@@ -236,12 +277,18 @@ async def update_model_config(request: Request):
 
 @app.get("/config/napcat")
 def get_napcat_config():
+    """
+    获取 Napcat 适配器配置文件 (config.toml) 的内容。
+    """
     if STARTUP_ERROR or not NAPCAT_CONFIG_PATH: return {}
     with open(NAPCAT_CONFIG_PATH, "r", encoding="utf-8") as f:
         return tomlkit.load(f)
 
 @app.post("/config/napcat")
 async def update_napcat_config(request: Request):
+    """
+    更新 Napcat 适配器配置文件 (config.toml)。
+    """
     if STARTUP_ERROR or not NAPCAT_CONFIG_PATH: return {"status": "error", "message": STARTUP_ERROR or "Napcat config path not found"}
     new_data = await request.json()
     with open(NAPCAT_CONFIG_PATH, "r+", encoding="utf-8") as f:
@@ -258,6 +305,9 @@ async def update_napcat_config(request: Request):
 
 @app.websocket("/ws/logs")
 async def websocket_log_endpoint(websocket: WebSocket):
+    """
+    通过 WebSocket 实时流式传输日志文件内容。
+    """
     await websocket.accept()
     if not LOG_FILE_PATH:
         await websocket.send_text('{"type": "status", "status": "not_found", "message": "未找到日志文件"}')
@@ -266,11 +316,11 @@ async def websocket_log_endpoint(websocket: WebSocket):
     try:
         await websocket.send_text('{"type": "status", "status": "connected", "message": "已连接到日志流"}')
         with open(LOG_FILE_PATH, "r", encoding="utf-8") as f:
-            f.seek(0, 2)
+            f.seek(0, 2)  # 移动到文件末尾
             while True:
                 line = f.readline()
                 if not line:
-                    await asyncio.sleep(0.5)
+                    await asyncio.sleep(0.5)  # 如果没有新行，则等待
                     continue
                 await websocket.send_text(line.strip())
     except WebSocketDisconnect:

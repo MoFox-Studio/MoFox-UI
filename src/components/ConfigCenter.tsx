@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 // 导入用于动画效果的framer-motion库
 import { motion } from 'framer-motion';
 // 从lucide-react库导入保存图标
-import { Save } from 'lucide-react';
-// 导入自定义的Button组件
+import { Save, FileJson, ArrowLeft } from 'lucide-react';
+import Editor from '@monaco-editor/react';
 import { Button } from './ui/button';
 // 导入sonner库的toast函数，用于显示通知
 import { toast } from 'sonner';
@@ -27,12 +27,16 @@ export function ConfigCenter() {
   const { t } = useLanguage();
   // 状态：是否正在保存配置
   const [saving, setSaving] = useState(false);
+  const [isEditorMode, setIsEditorMode] = useState(false);
+  const [activeConfigFile, setActiveConfigFile] = useState<'bot' | 'model' | 'napcat'>('bot');
+  const [editorContent, setEditorContent] = useState('');
+
   // 状态：机器人配置
-  const [botConfig, setBotConfig] = useState(null);
+  const [botConfig, setBotConfig] = useState<any>(null);
   // 状态：模型配置
-  const [modelConfig, setModelConfig] = useState(null);
+  const [modelConfig, setModelConfig] = useState<any>(null);
   // 状态：Napcat适配器配置
-  const [napcatConfig, setNapcatConfig] = useState(null);
+  const [napcatConfig, setNapcatConfig] = useState<any>(null);
 
   // 副作用钩子：在组件挂载时从后端获取初始配置
   useEffect(() => {
@@ -50,6 +54,21 @@ export function ConfigCenter() {
     });
   }, []);
 
+  useEffect(() => {
+    if (isEditorMode) {
+      let contentToLoad = '';
+      if (activeConfigFile === 'bot') {
+        contentToLoad = JSON.stringify(botConfig, null, 2);
+      } else if (activeConfigFile === 'model') {
+        contentToLoad = JSON.stringify(modelConfig, null, 2);
+      } else if (activeConfigFile === 'napcat') {
+        contentToLoad = JSON.stringify(napcatConfig, null, 2);
+      }
+      setEditorContent(contentToLoad);
+    }
+  }, [isEditorMode, activeConfigFile, botConfig, modelConfig, napcatConfig]);
+
+
   // 更新机器人配置的状态
   const handleBotConfigChange = (newConfig: any) => setBotConfig(newConfig);
   // 更新模型配置的状态
@@ -57,8 +76,51 @@ export function ConfigCenter() {
   // 更新Napcat配置的状态
   const handleNapcatConfigChange = (newConfig: any) => setNapcatConfig(newConfig);
 
+  const handleSaveFromEditor = async () => {
+    setSaving(true);
+    try {
+      const newConfig = JSON.parse(editorContent);
+      let endpoint = '';
+      let configSetter: (config: any) => void;
+      const configName = `${activeConfigFile}-config.json`;
+
+      if (activeConfigFile === 'bot') {
+        endpoint = '/config/bot';
+        configSetter = setBotConfig;
+      } else if (activeConfigFile === 'model') {
+        endpoint = '/config/model';
+        configSetter = setModelConfig;
+      } else { // napcat
+        endpoint = '/config/napcat';
+        configSetter = setNapcatConfig;
+      }
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newConfig),
+      });
+
+      if (!res.ok) {
+        throw new Error(`保存 ${configName} 失败: ${res.statusText}`);
+      }
+
+      configSetter(newConfig);
+      toast.success(`${configName} 保存成功!`);
+
+    } catch (error) {
+      console.error("保存失败:", error);
+      const errorMessage = error instanceof SyntaxError
+        ? "JSON 格式无效。请检查您的配置。"
+        : `保存更改失败。`;
+      toast.error(errorMessage);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // 处理保存所有配置的函数
-  const handleSave = async () => {
+  const handleSaveAll = async () => {
     setSaving(true);
     try {
       const results = await Promise.all([
@@ -122,21 +184,107 @@ export function ConfigCenter() {
     );
   }
 
+  if (isEditorMode) {
+    return (
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="flex-shrink-0 p-8 pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>编辑配置文件</h1>
+              <p className="text-muted-foreground mt-2">直接修改JSON源文件</p>
+            </div>
+            <Button variant="outline" onClick={() => setIsEditorMode(false)}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              返回配置
+            </Button>
+          </div>
+        </div>
+
+        {/* Editor Section */}
+        <div className="flex-grow min-h-0 px-8 pb-8">
+          <div className="h-full w-full flex flex-col glass-card p-4" style={{ height: '75vh' }}>
+            {/* Tabs */}
+            <div className="flex-shrink-0 flex items-center gap-2 mb-4 p-1 glass rounded-[var(--radius)]">
+              {(['bot', 'model', 'napcat'] as const).map(file => (
+                <Button
+                  key={file}
+                  variant={activeConfigFile === file ? "default" : "ghost"}
+                  onClick={() => setActiveConfigFile(file)}
+                  className={`flex-1 transition-all duration-300 ${activeConfigFile === file ? 'text-background' : ''}`}
+                  style={{ fontWeight: 600 }}
+                >
+                  {file}-config.json
+                </Button>
+              ))}
+            </div>
+            {/* Editor Wrapper */}
+            <div className="flex-grow min-h-0 rounded-[var(--radius)] overflow-hidden relative">
+              <Editor
+                height="100%"
+                language="json"
+                value={editorContent}
+                onChange={(value) => setEditorContent(value || "")}
+                theme="vs-dark"
+                options={{
+                  minimap: { enabled: false },
+                  automaticLayout: true,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Floating Save Button */}
+        <div className="fixed bottom-8 right-8 z-50">
+          <Button
+            onClick={handleSaveFromEditor}
+            disabled={saving}
+            className="glass-button bg-gradient-to-r from-primary via-secondary to-primary hover:opacity-90 rounded-full px-8 py-6 transition-all duration-300 shadow-2xl shadow-primary/15"
+            style={{ fontWeight: 600, color: 'var(--glass-button-text)' }}
+          >
+            {saving ? (
+              <>
+                <motion.div
+                  className="w-5 h-5 border-2 border-background border-t-transparent rounded-full mr-2"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                />
+                {t.common.saving}
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5 mr-2" />
+                保存当前文件
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full overflow-auto p-8 relative">
+    <div className="flex-1 overflow-y-auto p-8 relative">
       <div className="max-w-7xl mx-auto pb-24">
-        {/* 页面标题 */}
-        <motion.div 
+        <motion.div
           className="mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>{t.config.title}</h1>
-          <p className="text-muted-foreground mt-2">{t.nav.config}</p>
+          <div className="flex items-center justify-between">
+            <div>
+                <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>{t.config.title}</h1>
+                <p className="text-muted-foreground mt-2">{t.nav.config}</p>
+            </div>
+            <Button variant="outline" onClick={() => setIsEditorMode(true)}>
+              <FileJson className="w-4 h-4 mr-2" />
+              编辑配置文件
+            </Button>
+          </div>
         </motion.div>
 
-        {/* 配置卡片列表 */}
         <div className="space-y-6">
           {configCards.map(({ Component, key, config, onChange }, index) => (
             <motion.div
@@ -149,15 +297,13 @@ export function ConfigCenter() {
                 ease: [0.4, 0, 0.2, 1]
               }}
             >
-              {/* 仅在配置加载后渲染组件 */}
               {config && <Component config={config} onChange={onChange} />}
             </motion.div>
           ))}
         </div>
       </div>
 
-      {/* 浮动保存按钮 */}
-      <motion.div 
+      <motion.div
         className="fixed bottom-8 right-8 z-50"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -166,15 +312,14 @@ export function ConfigCenter() {
         whileTap={{ scale: 0.97 }}
       >
         <Button
-          onClick={handleSave}
+          onClick={handleSaveAll}
           disabled={saving}
           className="glass-button bg-gradient-to-r from-primary via-secondary to-primary hover:opacity-90 rounded-full px-8 py-6 transition-all duration-300 shadow-2xl shadow-primary/15"
           style={{ fontWeight: 600, color: 'var(--glass-button-text)' }}
         >
           {saving ? (
             <>
-              {/* 保存中的加载动画 */}
-              <motion.div 
+              <motion.div
                 className="w-5 h-5 border-2 border-background border-t-transparent rounded-full mr-2"
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}

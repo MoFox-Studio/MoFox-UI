@@ -191,7 +191,6 @@
   }
 
   img, svg, video, canvas, audio, iframe, embed, object {
-    vertical-align: middle;
     display: block;
   }
 
@@ -331,17 +330,12 @@
     outline-color: color-mix(in oklab, oklch(.708 0 0) 50%, transparent);
   }
 
-  body {
-    background-color: var(--background);
-    color: var(--foreground);
-  }
-
-  * {
-    border-color: var(--border);
-  }
-
   html {
     transition: background-color .8s cubic-bezier(.4, 0, .2, 1);
+  }
+
+  html, body, #root {
+    height: 100%;
   }
 
   body {
@@ -349,7 +343,6 @@
     color: var(--foreground);
     font-family: var(--font-family);
     transition: background-color .8s cubic-bezier(.4, 0, .2, 1), color .8s cubic-bezier(.4, 0, .2, 1);
-    overflow: hidden;
   }
 
   :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) h1 {
@@ -2296,6 +2289,7 @@
 
   :is(.\*\:data-\[slot\=select-value\]\:line-clamp-1 > *)[data-slot="select-value"] {
     -webkit-line-clamp: 1;
+    line-clamp: 1;
     -webkit-box-orient: vertical;
     display: -webkit-box;
     overflow: hidden;
@@ -2534,6 +2528,7 @@
 
   .glass {
     -webkit-backdrop-filter: blur(40px) saturate(180%);
+    backdrop-filter: blur(40px) saturate(180%);
     background: #ffffff08;
     border: 1px solid #ffffff2e;
     transition: all .8s cubic-bezier(.4, 0, .2, 1);
@@ -2643,6 +2638,7 @@
 
   .glass-card {
     -webkit-backdrop-filter: blur(40px) saturate(180%);
+    backdrop-filter: blur(40px) saturate(180%);
     background: #ffffff05;
     border: 1px solid #ffffff26;
     border-radius: 24px;
@@ -2673,6 +2669,7 @@
 
   .glass-input {
     -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
     background: #ffffff05;
     border: 1px solid #ffffff1f;
     transition: all .4s cubic-bezier(.4, 0, .2, 1);
@@ -2697,6 +2694,7 @@
 
   .glass-button {
     -webkit-backdrop-filter: blur(30px) saturate(180%);
+    backdrop-filter: blur(30px) saturate(180%);
     --glass-button-text: #fff;
     background: #ffffff14;
     border: 1px solid #fff3;

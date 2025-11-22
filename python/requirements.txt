@@ -1,18 +1,36 @@
-annotated-doc==0.0.3
-annotated-types==0.7.0
-anyio==3.7.1
-click==8.3.0
-colorama==0.4.6
+# FastAPI 框架的核心依赖
 fastapi==0.120.3
-h11==0.16.0
-idna==3.11
-pydantic==2.12.3
-pydantic_core==2.41.4
-python-multipart==0.0.20
-sniffio==1.3.1
-starlette==0.49.1
-tomlkit==0.13.3
-typing-inspection==0.4.2
-typing_extensions==4.15.0
+# ASGI 服务器，用于运行 FastAPI 应用
 uvicorn==0.38.0
+# Pydantic 用于数据验证和设置管理
+pydantic==2.12.3
+# Pydantic 的核心依赖
+pydantic_core==2.41.4
+# Starlette 是 FastAPI 使用的 ASGI 框架
+starlette==0.49.1
+# AnyIO 是一个异步网络库
+anyio==3.7.1
+# Click 用于创建命令行界面
+click==8.3.0
+# Colorama 用于在终端中显示彩色文本
+colorama==0.4.6
+# H11 是一个 HTTP/1.1 客户端/服务器实现
+h11==0.16.0
+# Idna 用于处理国际化域名
+idna==3.11
+# Python-multipart 用于处理 multipart/form-data 请求
+python-multipart==0.0.20
+# Sniffio 用于检测正在使用的异步 I/O 库
+sniffio==1.3.1
+# Tomlkit 用于处理 TOML 文件
+tomlkit==0.13.3
+# Typing-inspection 用于运行时类型检查
+typing-inspection==0.4.2
+# Typing_extensions 提供了对新类型提示功能的向后兼容支持
+typing_extensions==4.15.0
+# Watchgod 用于在开发过程中监视文件更改并重新加载应用
 watchgod==0.8.2
+# Annotated-doc 用于处理带注释的文档
+annotated-doc==0.0.3
+# Annotated-types 提供了可在运行时检查的带注释的类型
+annotated-types==0.7.0

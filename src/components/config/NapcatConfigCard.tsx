@@ -27,9 +27,11 @@ export function NapcatConfigCard({ config, onChange }: { config: any, onChange: 
   return (
     <div className="glass-card p-6 space-y-6">
       {/* 卡片标题 */}
-      <div className="flex items-center gap-3">
-        <Wifi className="w-5 h-5 text-primary" />
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Napcat Adapter</h3>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+            <Wifi className="w-5 h-5 text-primary" />
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Napcat Adapter</h3>
+        </div>
       </div>
 
       {/* 启用插件开关 */}

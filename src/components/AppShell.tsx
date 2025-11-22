@@ -39,7 +39,7 @@ export function AppShell({ children, currentView, onViewChange, onLogout, isDark
   };
 
   return (
-    <div className="h-screen w-screen aurora-bg flex overflow-hidden">
+    <div className="h-full w-full aurora-bg flex">
       {/* 侧边栏 */}
       <aside className="w-20 glass border-r border-border/50 flex flex-col items-center py-6 gap-6 relative">
         {/* 侧边栏背景渐变效果 */}
@@ -172,7 +172,7 @@ export function AppShell({ children, currentView, onViewChange, onLogout, isDark
       </aside>
 
       {/* 主要内容区域 */}
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 flex flex-col min-h-0">
         {children}
       </main>
     </div>
