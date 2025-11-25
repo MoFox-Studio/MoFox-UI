@@ -39,76 +39,71 @@ app.add_middleware(
 
 # --- 核心: 配置文件查找逻辑 ---
 def find_config_paths():
-    """
-    通过向上遍历目录结构来动态查找配置文件。
-    此方法旨在适应 MoFox-UI 文件夹与 Bot/MoFox-Bot 文件夹作为同级目录的常见项目结构。
-    """
-    bot_config, model_config, napcat_config = None, None, None
-    bot_root_found = None
-    
+    # --- 优先从环境变量中查找路径 ---
+    bot_config_from_env = os.getenv('MOFOX_BOT_CONFIG_PATH')
+    model_config_from_env = os.getenv('MOFOX_MODEL_CONFIG_PATH')
+    napcat_config_from_env = os.getenv('MOFOX_NAPCAT_CONFIG_PATH')
+    bot_root_from_env = os.getenv('MOFOX_BOT_ROOT')
+
+    if bot_config_from_env and os.path.exists(bot_config_from_env):
+        print(f"成功从环境变量加载 Bot 配置: {bot_config_from_env}")
+        return {
+            "bot": bot_config_from_env,
+            "model": model_config_from_env,
+            "napcat": napcat_config_from_env,
+            "bot_root": bot_root_from_env
+        }
+
+    # --- 如果环境变量未设置，则回退到文件系统扫描 ---
+    print("未通过环境变量找到配置文件，正在执行智能文件系统扫描...")
     try:
-        # 从此脚本文件所在的目录 (.../MoFox-UI/python) 的上两级开始搜索
-        # e.g., D:\Ksdeath\MoFox-Bot\
-        start_search_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-        # 向上搜索最多5层，以避免无限循环或搜索不相关的目录
-        for i in range(5):
-            # 在当前搜索目录中查找 "Bot" 或 "MoFox-Bot"
-            for name in ["Bot", "MoFox-Bot"]:
-                potential_path = os.path.join(start_search_dir, name)
-                
-                if os.path.isdir(potential_path):
-                    bot_root = potential_path
-                    if name == "MoFox-Bot":
-                         # 实际的 Bot 目录在 "MoFox-Bot" 内部
-                        bot_root = os.path.join(potential_path, "Bot")
-
-                    if os.path.isdir(bot_root):
-                        config_dir = os.path.join(bot_root, "config")
-                        if os.path.isdir(config_dir):
-                            bot_config_candidate = os.path.join(config_dir, "bot_config.toml")
-                            
-                            if os.path.exists(bot_config_candidate):
-                                print(f"成功在以下位置找到 Bot 配置: {bot_config_candidate}")
-                                bot_config = bot_config_candidate
-                                model_config = os.path.join(config_dir, "model_config.toml")
-                                napcat_config_std = os.path.join(config_dir, "plugins", "napcat_adapter", "config.toml")
-                                
-                                bot_root_found = bot_root
-                                if os.path.exists(napcat_config_std):
-                                    napcat_config = napcat_config_std
-                                
-                                # 只要找到主配置文件，就停止对 Bot 文件夹的搜索
-                                break 
-            
-            # 如果已找到，则跳出外部循环
-            if bot_root_found:
-                break
-            
-            # 如果没找到，就向上一层目录
-            next_search_dir = os.path.dirname(start_search_dir)
-            if next_search_dir == start_search_dir:  # 到达根目录
-                break
-            start_search_dir = next_search_dir
+        # 从 .../MoFox-UI/python 的上两级目录 (.../MoFox-UI) 开始
+        current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         
-        # --- 如果标准路径中没有，则为 napcat 查找备用 'ada' 路径 ---
-        if not napcat_config:
-            search_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            for _ in range(5):
-                # 结构: .../MoFox-Bot-false/MoFox-Bot/Adapter/config/config.toml
-                ada_root = os.path.join(search_dir, "MoFox-Bot-false")
-                if os.path.isdir(ada_root):
-                    ada_path = os.path.join(ada_root, "MoFox-Bot", "Adapter", "config", "config.toml")
-                    if os.path.exists(ada_path):
-                        print(f"成功在备用位置找到 'ada' (napcat) 配置文件: {ada_path}")
-                        napcat_config = ada_path
-                        break
-                
-                parent_dir = os.path.dirname(search_dir)
-                if parent_dir == search_dir: break
-                search_dir = parent_dir
+        # 向上搜索最多5层，寻找包含 MoFox-UI 和 Bot/MoFox-Bot 的共同父目录 (core)
+        for _ in range(5):
+            parent_dir = os.path.dirname(current_dir)
+            if parent_dir == current_dir: # 到达文件系统根部
+                break
 
-        return {"bot": bot_config, "model": model_config, "napcat": napcat_config, "bot_root": bot_root_found}
+            # 检查这个父目录是否是包含UI和Bot的共同目录
+            has_ui = os.path.isdir(os.path.join(parent_dir, "MoFox-UI"))
+            has_bot_dir = os.path.isdir(os.path.join(parent_dir, "Bot"))
+            has_mofox_bot_dir = os.path.isdir(os.path.join(parent_dir, "MoFox-Bot"))
+
+            if has_ui and (has_bot_dir or has_mofox_bot_dir):
+                print(f"成功找到项目核心目录: {parent_dir}")
+                
+                bot_root = None
+                if has_bot_dir:
+                    bot_root = os.path.join(parent_dir, "Bot")
+                elif has_mofox_bot_dir:
+                    # 兼容 MoFox-Bot/Bot 的结构
+                    bot_root = os.path.join(parent_dir, "MoFox-Bot", "Bot")
+
+                if bot_root and os.path.isdir(bot_root):
+                    config_dir = os.path.join(bot_root, "config")
+                    if os.path.isdir(config_dir):
+                        bot_config_path = os.path.join(config_dir, "bot_config.toml")
+                        if os.path.exists(bot_config_path):
+                            print(f"成功在以下位置找到 Bot 配置: {bot_config_path}")
+                            model_config_path = os.path.join(config_dir, "model_config.toml")
+                            napcat_config_path = os.path.join(config_dir, "plugins", "napcat_adapter", "config.toml")
+                            
+                            return {
+                                "bot": bot_config_path,
+                                "model": model_config_path if os.path.exists(model_config_path) else None,
+                                "napcat": napcat_config_path if os.path.exists(napcat_config_path) else None,
+                                "bot_root": bot_root
+                            }
+                # 既然找到了核心目录，无论是否成功解析内部，都应停止搜索
+                break
+            
+            current_dir = parent_dir # 继续向上一层
+
+        # 如果循环结束仍未找到
+        print("警告: 未能通过智能扫描找到项目核心目录。")
+        return {"bot": None, "model": None, "napcat": None, "bot_root": None}
 
     except Exception as e:
         print(f"查找配置文件时发生未知错误: {e}")
