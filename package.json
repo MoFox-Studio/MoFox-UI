@@ -70,5 +70,8 @@
             "build": "vite build",
             "build:demo": "vite build --mode demo",
             "start": "concurrently \"npm:backend\" \"start_frontend.bat\""
+      },
+      "overrides": {
+            "glob": "^8.0.0"
       }
 }
