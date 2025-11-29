@@ -465,23 +465,23 @@ export function PluginMarket() {
               </div>
 
               <div className="space-y-4">
-                <div className="bg-muted/50 dark:bg-muted rounded-xl p-4 border border-border">
+                <div className="bg-muted/50 rounded-xl p-4 border border-border">
                   <h3 className="font-semibold mb-2 text-sm opacity-70">描述</h3>
                   <p className="leading-relaxed">{selectedPlugin.description}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-muted/50 dark:bg-muted rounded-xl p-4 border border-border">
+                  <div className="bg-muted/50 rounded-xl p-4 border border-border">
                     <h3 className="font-semibold mb-2 text-sm opacity-70">版本</h3>
                     <p className="font-mono text-lg">{selectedPlugin.version}</p>
                   </div>
-                  <div className="bg-muted/50 dark:bg-muted rounded-xl p-4 border border-border">
+                  <div className="bg-muted/50 rounded-xl p-4 border border-border">
                     <h3 className="font-semibold mb-2 text-sm opacity-70">许可证</h3>
                     <p>{selectedPlugin.license}</p>
                   </div>
                 </div>
 
-                <div className="bg-muted/50 dark:bg-muted rounded-xl p-4 border border-border">
+                <div className="bg-muted/50 rounded-xl p-4 border border-border">
                   <h3 className="font-semibold mb-2 text-sm opacity-70">上传时间</h3>
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-primary" />
@@ -490,13 +490,13 @@ export function PluginMarket() {
                 </div>
 
                 {selectedPlugin.tags.length > 0 && (
-                  <div className="bg-muted/50 dark:bg-muted rounded-xl p-4 border border-border">
+                  <div className="bg-muted/50 rounded-xl p-4 border border-border">
                     <h3 className="font-semibold mb-3 text-sm opacity-70">标签</h3>
                     <div className="flex flex-wrap gap-2">
                       {selectedPlugin.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="px-3 py-1.5 rounded-lg text-sm bg-background/80 dark:bg-background border border-border"
+                          className="px-3 py-1.5 rounded-lg text-sm bg-background/80 border border-border"
                         >
                           {tag}
                         </span>

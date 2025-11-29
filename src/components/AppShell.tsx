@@ -37,9 +37,9 @@ export function AppShell({ children, currentView, onViewChange, onLogout }: AppS
   };
 
   return (
-    <div className="h-screen w-full aurora-bg flex overflow-hidden">
+    <div className="h-screen w-full aurora-bg flex">
       {/* 侧边栏 */}
-      <aside className="w-20 glass border-r border-border/50 flex flex-col items-center py-6 gap-6 relative">
+      <aside className="w-20 glass border-r border-border/50 flex flex-col items-center py-6 gap-6 relative shrink-0">
         {/* 侧边栏背景渐变效果 */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/3 via-transparent to-secondary/3 pointer-events-none" />
         <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-primary/15 to-transparent" />
@@ -143,7 +143,7 @@ export function AppShell({ children, currentView, onViewChange, onLogout }: AppS
       </aside>
 
       {/* 主要内容区域 */}
-      <main className="flex-1 flex flex-col min-h-0">
+      <main className="flex-1 flex flex-col min-h-0 overflow-auto">
         {children}
       </main>
     </div>
