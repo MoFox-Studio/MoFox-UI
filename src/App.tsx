@@ -40,11 +40,6 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   // 状态：当前显示的主视图
   const [currentView, setCurrentView] = useState('dashboard');
-  // 状态：是否为暗黑模式，从localStorage初始化
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const saved = localStorage.getItem('mofox-dark-mode');
-    return saved ? JSON.parse(saved) : true;
-  });
   // 状态：当前主题，从localStorage初始化
   const [currentTheme, setCurrentTheme] = useState<Theme | null>(() => {
     const saved = localStorage.getItem('mofox-theme');
@@ -62,13 +57,6 @@ export default function App() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     setCurrentView('dashboard');
-  };
-
-  // 切换暗黑/明亮模式
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    localStorage.setItem('mofox-dark-mode', JSON.stringify(newMode));
   };
 
   // 应用新主题
@@ -102,16 +90,6 @@ export default function App() {
       b: parseInt(result[3], 16)
     } : null;
   };
-
-  // 副作用钩子：根据 isDarkMode 状态应用暗黑/明亮模式的类
-  useEffect(() => {
-    const root = document.documentElement;
-    if (isDarkMode) {
-      root.classList.remove('light');
-    } else {
-      root.classList.add('light');
-    }
-  }, [isDarkMode]);
 
   // 副作用钩子：在组件挂载时应用保存的主题
   useEffect(() => {
@@ -236,8 +214,6 @@ export default function App() {
           currentView={currentView}
           onViewChange={setCurrentView}
           onLogout={handleLogout}
-          isDarkMode={isDarkMode}
-          onToggleDarkMode={toggleDarkMode}
         >
           <div className="flex-1 flex flex-col">
             {renderView()}
@@ -245,12 +221,12 @@ export default function App() {
         </AppShell>
         <Toaster
           position="top-right"
-          theme={isDarkMode ? "dark" : "light"}
+          theme="light"
           toastOptions={{
             style: {
-              background: isDarkMode ? '#1e293b' : '#ffffff',
-              color: isDarkMode ? '#f1f5f9' : '#0f172a',
-              border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+              background: '#ffffff',
+              color: '#0f172a',
+              border: '1px solid rgba(0, 0, 0, 0.1)',
               backdropFilter: 'none',
               WebkitBackdropFilter: 'none',
             },

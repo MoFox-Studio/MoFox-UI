@@ -15,12 +15,10 @@ interface AppShellProps {
   currentView: string; // 当前活动的视图标识
   onViewChange: (view: string) => void; // 视图切换时的回调函数
   onLogout: () => void; // 登出时的回调函数
-  isDarkMode: boolean; // 是否为暗黑模式
-  onToggleDarkMode: () => void; // 切换暗黑模式的回调函数
 }
 
 // AppShell组件定义，是应用的主要布局框架
-export function AppShell({ children, currentView, onViewChange, onLogout, isDarkMode, onToggleDarkMode }: AppShellProps) {
+export function AppShell({ children, currentView, onViewChange, onLogout }: AppShellProps) {
   // 使用语言上下文
   const { language, setLanguage, t } = useLanguage();
   
@@ -39,7 +37,7 @@ export function AppShell({ children, currentView, onViewChange, onLogout, isDark
   };
 
   return (
-    <div className="h-full w-full aurora-bg flex">
+    <div className="h-screen w-full aurora-bg flex overflow-hidden">
       {/* 侧边栏 */}
       <aside className="w-20 glass border-r border-border/50 flex flex-col items-center py-6 gap-6 relative">
         {/* 侧边栏背景渐变效果 */}
@@ -120,33 +118,6 @@ export function AppShell({ children, currentView, onViewChange, onLogout, isDark
                   {language.toUpperCase()}
                 </span>
               </div>
-            </motion.div>
-          </Button>
-        </motion.div>
-
-        {/* 主题切换按钮 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45, duration: 0.4 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Button
-            onClick={onToggleDarkMode}
-            variant="ghost"
-            size="icon"
-            className="w-12 h-12 rounded-2xl glass-hover hover:border-primary/50 hover:text-primary relative z-10 mb-2"
-            title={isDarkMode ? (language === 'zh' ? '切换到亮色模式' : 'Switch to Light Mode') : (language === 'zh' ? '切换到暗色模式' : 'Switch to Dark Mode')}
-          >
-            <motion.div
-              key={isDarkMode ? 'sun' : 'moon'} // 动画key，确保主题切换时触发动画
-              initial={{ rotate: -180, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              exit={{ rotate: 180, opacity: 0 }}
-              transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-            >
-              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </motion.div>
           </Button>
         </motion.div>

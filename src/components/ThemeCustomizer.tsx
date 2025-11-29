@@ -22,45 +22,45 @@ interface ThemeCustomizerProps {
 const getPresetThemes = (language: 'zh' | 'en'): Theme[] => [
   {
     id: 'default',
-    name: language === 'zh' ? '默认主题' : 'Default',
-    primary: '#00F5FF',
-    secondary: '#7F00FF',
-    background: 'linear-gradient(135deg, #1A1A2E 0%, #16213E 25%, #1A1A2E 50%, #0F3460 75%, #1A1A2E 100%)',
+    name: language === 'zh' ? '默认 (天际蓝)' : 'Default (Horizon)',
+    primary: '#0284C7',
+    secondary: '#64748B',
+    background: '#F8FAFC',
   },
   {
-    id: 'ocean',
-    name: language === 'zh' ? '深海蓝' : 'Ocean Blue',
-    primary: '#00D9FF',
-    secondary: '#0066FF',
-    background: 'linear-gradient(135deg, #0A1931 0%, #0F2557 50%, #0A1931 100%)',
+    id: 'titanium',
+    name: language === 'zh' ? '钛金灰' : 'Titanium',
+    primary: '#4B5563',
+    secondary: '#9CA3AF',
+    background: '#F3F4F6',
   },
   {
-    id: 'sunset',
-    name: language === 'zh' ? '霞光紫' : 'Sunset Purple',
-    primary: '#FF00FF',
-    secondary: '#FF6B35',
-    background: 'linear-gradient(135deg, #1A0E2E 0%, #2E1A47 50%, #1A0E2E 100%)',
+    id: 'glacier',
+    name: language === 'zh' ? '冰川白' : 'Glacier',
+    primary: '#0EA5E9',
+    secondary: '#7DD3FC',
+    background: '#F0F9FF',
   },
   {
-    id: 'emerald',
-    name: language === 'zh' ? '翡翠绿' : 'Emerald Green',
-    primary: '#00FF88',
-    secondary: '#00D9A3',
-    background: 'linear-gradient(135deg, #0A2E1A 0%, #0F4C2E 50%, #0A2E1A 100%)',
+    id: 'lavender',
+    name: language === 'zh' ? '薰衣草' : 'Lavender',
+    primary: '#9333EA',
+    secondary: '#C084FC',
+    background: '#FAF5FF',
   },
   {
-    id: 'crimson',
-    name: language === 'zh' ? '赤红' : 'Crimson',
-    primary: '#FF3366',
-    secondary: '#FF6B9D',
-    background: 'linear-gradient(135deg, #2E0A1A 0%, #4C0F2E 50%, #2E0A1A 100%)',
+    id: 'marble',
+    name: language === 'zh' ? '大理石' : 'Marble',
+    primary: '#18181B',
+    secondary: '#71717A',
+    background: '#FFFFFF',
   },
   {
-    id: 'amber',
-    name: language === 'zh' ? '琥珀金' : 'Amber Gold',
-    primary: '#FFB800',
-    secondary: '#FF8C00',
-    background: 'linear-gradient(135deg, #2E1A0A 0%, #4C2E0F 50%, #2E1A0A 100%)',
+    id: 'mint',
+    name: language === 'zh' ? '薄荷绿' : 'Mint',
+    primary: '#059669',
+    secondary: '#34D399',
+    background: '#ECFDF5',
   },
 ];
 
@@ -68,9 +68,9 @@ export function ThemeCustomizer({ currentTheme, onApplyTheme }: ThemeCustomizerP
   const { t, language } = useLanguage();
   const presetThemes = getPresetThemes(language);
   const [selectedTheme, setSelectedTheme] = useState('default');
-  const [customPrimary, setCustomPrimary] = useState('#00F5FF');
-  const [customSecondary, setCustomSecondary] = useState('#7F00FF');
-  const [customBackground, setCustomBackground] = useState('#1A1A2E');
+  const [customPrimary, setCustomPrimary] = useState('#0284C7');
+  const [customSecondary, setCustomSecondary] = useState('#64748B');
+  const [customBackground, setCustomBackground] = useState('#F8FAFC');
 
   useEffect(() => {
     if (currentTheme) {
